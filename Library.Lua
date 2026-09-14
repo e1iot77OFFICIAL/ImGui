@@ -22,7 +22,8 @@ local function Create(className, properties, parent)
 	return instance
 end
 
-local FONT = Font.new("rbxasset://fonts/families/Ubuntu.json")
+local FONT       = Font.new("rbxasset://fonts/families/RobotoMono.json")
+local FONT_LABEL = Font.new("rbxasset://fonts/families/RobotoMono.json")
 
 function Library:new(options)
 	options = self:Init({
@@ -36,12 +37,14 @@ function Library:new(options)
 	Window.ActiveTab = nil
 	Window.Opened = true
 
+	-- === ScreenGui ===
 	local ScreenGui = Create("ScreenGui", {
 		Name = "MyLib",
 		ResetOnSpawn = false,
 		ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 	}, runService:IsStudio() and players.LocalPlayer:WaitForChild("PlayerGui") or coreGui)
 
+	-- === Main ===
 	local Main = Create("Frame", {
 		Name = "Main", BorderSizePixel = 0,
 		BackgroundColor3 = Color3.fromRGB(36, 38, 37),
@@ -49,15 +52,16 @@ function Library:new(options)
 		Size = options.size,
 		Position = UDim2.new(0.5, 0, 0.5, 0)
 	}, ScreenGui)
-	Create("UICorner", { CornerRadius = UDim.new(0, 4) }, Main)
-	Create("UIStroke", { Color = Color3.fromRGB(55, 87, 129), Thickness = 1 }, Main)
+	Create("UICorner", { CornerRadius = UDim.new(0, 2) }, Main)
+	Create("UIStroke", { Color = Color3.fromRGB(55, 87, 129), ApplyStrokeMode = Enum.ApplyStrokeMode.Border }, Main)
 
+	-- === TopBar ===
 	local TopBar = Create("Frame", {
 		Name = "TopBar", BorderSizePixel = 0,
 		BackgroundColor3 = Color3.fromRGB(55, 87, 129),
 		Size = UDim2.new(1, 0, 0, 28)
 	}, Main)
-	Create("UICorner", { CornerRadius = UDim.new(0, 4) }, TopBar)
+	Create("UICorner", { CornerRadius = UDim.new(0, 2) }, TopBar)
 	Create("UIStroke", { Color = Color3.fromRGB(36, 38, 37), ApplyStrokeMode = Enum.ApplyStrokeMode.Border }, TopBar)
 	Create("Frame", {
 		Name = "Extension", BorderSizePixel = 0,
@@ -69,8 +73,8 @@ function Library:new(options)
 	local Title = Create("TextLabel", {
 		Name = "Title", BorderSizePixel = 0, TextSize = 14,
 		TextXAlignment = Enum.TextXAlignment.Left,
-		BackgroundTransparency = 1,
-		FontFace = FONT,
+		BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+		BackgroundTransparency = 1, FontFace = FONT,
 		TextColor3 = Color3.fromRGB(255, 255, 255),
 		Size = UDim2.new(0.5, 0, 1, 0),
 		Text = options.name
@@ -82,57 +86,68 @@ function Library:new(options)
 		TextColor3 = Color3.fromRGB(255, 255, 255),
 		BackgroundTransparency = 1,
 		Size = UDim2.new(0.056, 0, 1, 0),
-		Text = "X", Position = UDim2.new(0.944, 0, 0, 0),
-		FontFace = FONT
+		Position = UDim2.new(0.944, 0, 0, 0),
+		Text = "X", FontFace = FONT
 	}, TopBar)
 
-	-- === ShownButton (скрывает Navigation + ContentContainer) ===
 	local ShownButton = Create("TextButton", {
 		Name = "ShownButton", BorderSizePixel = 0, TextSize = 14,
 		TextColor3 = Color3.fromRGB(255, 255, 255),
 		BackgroundTransparency = 1,
 		Size = UDim2.new(0.056, 0, 1, 0),
 		Position = UDim2.new(0.888, 0, 0, 0),
-		Text = "▼",
-		FontFace = FONT
+		Text = "▼", FontFace = FONT
 	}, TopBar)
 
-	-- === ContentContainer ===
-	local ContentContainer = Create("Frame", {
-		Name = "ContentContainer", BorderSizePixel = 0,
-		BackgroundColor3 = Color3.fromRGB(36, 38, 37),
-		Size = UDim2.new(0.726, 0, 0.86667, 28),
-		Position = UDim2.new(0.26, 0, 0.06667, 0),
-		BackgroundTransparency = 0.8
-	}, Main)
-	Create("UICorner", { CornerRadius = UDim.new(0, 4) }, ContentContainer)
-
-	-- === Navigation ===
+	-- === Navigation (верхний горизонтальный таб-бар) ===
 	local Navigation = Create("Frame", {
 		Name = "Navigation", BorderSizePixel = 0,
-		BackgroundColor3 = Color3.fromRGB(55, 87, 129),
-		Size = UDim2.new(0.222, 0, 0.86667, 28),
-		Position = UDim2.new(0.022, 0, 0.06667, 0),
-		BackgroundTransparency = 0.8
+		BackgroundTransparency = 1,
+		Size = UDim2.new(0.96, 0, 0, 28),
+		Position = UDim2.new(0.022, 0, 0, 32)
 	}, Main)
-	Create("UICorner", { CornerRadius = UDim.new(0, 4) }, Navigation)
+	Create("UICorner", { CornerRadius = UDim.new(0, 2) }, Navigation)
 
 	local ButtonHolder = Create("Frame", {
 		Name = "ButtonHolder", BackgroundTransparency = 1,
+		BorderSizePixel = 0,
 		Size = UDim2.new(1, 0, 1, 0)
 	}, Navigation)
-	Create("UIPadding", { PaddingTop = UDim.new(0, 8), PaddingBottom = UDim.new(0, 8) }, ButtonHolder)
-	Create("UIListLayout", { Padding = UDim.new(0, 1), SortOrder = Enum.SortOrder.LayoutOrder }, ButtonHolder)
+	Create("UIPadding", {
+		PaddingTop = UDim.new(0, 4),
+		PaddingBottom = UDim.new(0, 4),
+		PaddingLeft = UDim.new(0, 4),
+		PaddingRight = UDim.new(0, 4)
+	}, ButtonHolder)
+	Create("UIListLayout", {
+		Padding = UDim.new(0, 4),
+		SortOrder = Enum.SortOrder.LayoutOrder,
+		FillDirection = Enum.FillDirection.Horizontal,
+		VerticalAlignment = Enum.VerticalAlignment.Center
+	}, ButtonHolder)
 
-	-- === ShownButton logic ===
+	-- === ContentContainer (контентная область) ===
+	local ContentContainer = Create("Frame", {
+		Name = "ContentContainer", BorderSizePixel = 0,
+		BackgroundColor3 = Color3.fromRGB(36, 38, 37),
+		Size = UDim2.new(0.964, 0, 1, -66),
+		Position = UDim2.new(0.018, 0, 0, 62),
+		BackgroundTransparency = 0.8
+	}, Main)
+	Create("UICorner", { CornerRadius = UDim.new(0, 2) }, ContentContainer)
+
+	-- === ShownButton logic (hide nav + content) ===
 	local uiShown = true
 	ShownButton.MouseButton1Click:Connect(function()
 		uiShown = not uiShown
 		Navigation.Visible = uiShown
 		ContentContainer.Visible = uiShown
 		ShownButton.Text = uiShown and "▼" or "▲"
-		-- Если скрыто — растягиваем окно по высоте
-		Main.Size = uiShown and options.size or UDim2.new(0, options.size.X.Offset, 0, 40)
+		if uiShown then
+			Main.Size = options.size
+		else
+			Main.Size = UDim2.new(0, options.size.X.Offset, 0, 32)
+		end
 	end)
 
 	-- === Drag ===
@@ -193,11 +208,11 @@ function Library:new(options)
 		notifOrder = notifOrder + 1
 		local Frame = Create("Frame", {
 			Name = "Notif", Size = UDim2.new(1, 0, 0, 50),
-			BackgroundColor3 = Color3.fromRGB(25, 25, 30),
+			BackgroundColor3 = Color3.fromRGB(36, 38, 37),
 			BackgroundTransparency = 0.1, BorderSizePixel = 0,
 			LayoutOrder = -notifOrder
 		}, NotifHolder)
-		Create("UICorner", { CornerRadius = UDim.new(0, 6) }, Frame)
+		Create("UICorner", { CornerRadius = UDim.new(0, 2) }, Frame)
 		Create("UIStroke", { Color = Color3.fromRGB(55, 87, 129), Thickness = 1 }, Frame)
 		Create("TextLabel", {
 			Size = UDim2.new(1, -16, 1, 0), Position = UDim2.new(0, 8, 0, 0),
@@ -212,18 +227,19 @@ function Library:new(options)
 		end)
 	end
 
-	-- === Component factories (принимают parent) ===
+	-- === Component factories ===
 	local function makeButton(parent, btnText, callback)
 		local ButtonFrame = Create("Frame", {
 			BorderSizePixel = 0, BackgroundColor3 = Color3.fromRGB(55, 87, 129),
 			Size = UDim2.new(1, 0, 0, 32)
 		}, parent)
+		Create("UICorner", { CornerRadius = UDim.new(0, 2) }, ButtonFrame)
 		local BtnTitle = Create("TextLabel", {
 			BorderSizePixel = 0, TextSize = 14, TextXAlignment = Enum.TextXAlignment.Left,
 			FontFace = FONT, TextColor3 = Color3.fromRGB(255, 255, 255),
 			BackgroundTransparency = 1, Size = UDim2.new(1, 0, 1, 0), Text = btnText
 		}, ButtonFrame)
-		Create("UIPadding", { PaddingLeft = UDim.new(0, 10) }, BtnTitle)
+		Create("UIPadding", { PaddingLeft = UDim.new(0, 6) }, BtnTitle)
 		local ClickBtn = Create("TextButton", {
 			BackgroundTransparency = 1, Size = UDim2.new(1, 0, 1, 0), Text = ""
 		}, ButtonFrame)
@@ -234,31 +250,33 @@ function Library:new(options)
 	local function makeLabel(parent, text, color)
 		local LabelFrame = Create("Frame", {
 			BorderSizePixel = 0, BackgroundColor3 = Color3.fromRGB(55, 87, 129),
-			Size = UDim2.new(1, 0, 0, 26)
+			Size = UDim2.new(1, 0, 0, 32)
 		}, parent)
+		Create("UICorner", { CornerRadius = UDim.new(0, 2) }, LabelFrame)
 		Create("TextLabel", {
-			BorderSizePixel = 0, TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left,
-			FontFace = FONT, TextColor3 = color or Color3.fromRGB(230, 230, 230),
+			BorderSizePixel = 0, TextSize = 14, TextXAlignment = Enum.TextXAlignment.Left,
+			FontFace = FONT, TextColor3 = color or Color3.fromRGB(255, 255, 255),
 			BackgroundTransparency = 1, Size = UDim2.new(1, 0, 1, 0), Text = tostring(text)
 		}, LabelFrame)
-		Create("UIPadding", { PaddingLeft = UDim.new(0, 10) }, LabelFrame)
+		Create("UIPadding", { PaddingLeft = UDim.new(0, 6) }, LabelFrame)
 		return LabelFrame
 	end
 
 	local function makeInfo(parent, text) return makeLabel(parent, text, Color3.fromRGB(255, 255, 16)) end
-	local function makeWarning(parent, text) return makeLabel(parent, text, Color3.fromRGB(255, 60, 60)) end
+	local function makeWarning(parent, text) return makeLabel(parent, text, Color3.fromRGB(255, 0, 0)) end
 
 	local function makeToggle(parent, toggleText, default, callback)
 		local ToggleFrame = Create("Frame", {
 			BorderSizePixel = 0, BackgroundColor3 = Color3.fromRGB(55, 87, 129),
 			Size = UDim2.new(1, 0, 0, 32)
 		}, parent)
+		Create("UICorner", { CornerRadius = UDim.new(0, 2) }, ToggleFrame)
 		Create("TextLabel", {
 			BorderSizePixel = 0, TextSize = 14, TextXAlignment = Enum.TextXAlignment.Left,
 			FontFace = FONT, TextColor3 = Color3.fromRGB(255, 255, 255),
 			BackgroundTransparency = 1, Size = UDim2.new(1, -40, 1, 0), Text = toggleText
 		}, ToggleFrame)
-		Create("UIPadding", { PaddingLeft = UDim.new(0, 10) }, ToggleFrame)
+		Create("UIPadding", { PaddingLeft = UDim.new(0, 6) }, ToggleFrame)
 		local CheckmarkHolder = Create("Frame", {
 			BorderSizePixel = 0,
 			BackgroundColor3 = default and Color3.fromRGB(74, 139, 226) or Color3.fromRGB(53, 85, 123),
@@ -284,12 +302,13 @@ function Library:new(options)
 			BorderSizePixel = 0, BackgroundColor3 = Color3.fromRGB(55, 87, 129),
 			Size = UDim2.new(1, 0, 0, 32)
 		}, parent)
+		Create("UICorner", { CornerRadius = UDim.new(0, 2) }, SliderFrame)
 		Create("TextLabel", {
 			BorderSizePixel = 0, TextSize = 14, TextXAlignment = Enum.TextXAlignment.Left,
 			FontFace = FONT, TextColor3 = Color3.fromRGB(255, 255, 255),
 			BackgroundTransparency = 1, Size = UDim2.new(1, -70, 1, 0), Text = sliderText
 		}, SliderFrame)
-		Create("UIPadding", { PaddingLeft = UDim.new(0, 10) }, SliderFrame)
+		Create("UIPadding", { PaddingLeft = UDim.new(0, 6) }, SliderFrame)
 		local ValueLabel = Create("TextLabel", {
 			BorderSizePixel = 0, TextSize = 14, TextXAlignment = Enum.TextXAlignment.Right,
 			FontFace = FONT, TextColor3 = Color3.fromRGB(255, 255, 255),
@@ -339,16 +358,17 @@ function Library:new(options)
 			BorderSizePixel = 0, BackgroundColor3 = Color3.fromRGB(55, 87, 129),
 			ClipsDescendants = true, Size = UDim2.new(1, 0, 0, 32)
 		}, parent)
+		Create("UICorner", { CornerRadius = UDim.new(0, 2) }, DropdownFrame)
 		local DropTitle = Create("TextLabel", {
 			BorderSizePixel = 0, TextSize = 14, TextXAlignment = Enum.TextXAlignment.Left,
 			FontFace = FONT, TextColor3 = Color3.fromRGB(255, 255, 255),
 			BackgroundTransparency = 1, Size = UDim2.new(1, 0, 1, 0), Text = dropText
 		}, DropdownFrame)
-		Create("UIPadding", { PaddingLeft = UDim.new(0, 10) }, DropTitle)
+		Create("UIPadding", { PaddingLeft = UDim.new(0, 6) }, DropTitle)
 		local OptionHolder = Create("Frame", {
 			Visible = false, BackgroundTransparency = 1,
 			Size = UDim2.new(1, 0, 0, 0),
-			Position = UDim2.new(0, 0, 0, 26)
+			Position = UDim2.new(0, 0, 0, 32)
 		}, DropdownFrame)
 		Create("UIListLayout", { Padding = UDim.new(0, 1), SortOrder = Enum.SortOrder.LayoutOrder }, OptionHolder)
 		local ClickBtn = Create("TextButton", {
@@ -394,12 +414,13 @@ function Library:new(options)
 			BorderSizePixel = 0, BackgroundColor3 = Color3.fromRGB(55, 87, 129),
 			Size = UDim2.new(1, 0, 0, 32)
 		}, parent)
+		Create("UICorner", { CornerRadius = UDim.new(0, 2) }, InputFrame)
 		Create("TextLabel", {
 			BorderSizePixel = 0, TextSize = 14, TextXAlignment = Enum.TextXAlignment.Left,
 			FontFace = FONT, TextColor3 = Color3.fromRGB(255, 255, 255),
 			BackgroundTransparency = 1, Size = UDim2.new(0.4, 0, 1, 0), Text = inputText
 		}, InputFrame)
-		Create("UIPadding", { PaddingLeft = UDim.new(0, 10) }, InputFrame)
+		Create("UIPadding", { PaddingLeft = UDim.new(0, 6) }, InputFrame)
 		local TextBox = Create("TextBox", {
 			BorderSizePixel = 0, TextSize = 14,
 			BackgroundColor3 = Color3.fromRGB(45, 70, 105),
@@ -417,52 +438,157 @@ function Library:new(options)
 		return InputFrame
 	end
 
+	-- === CollapsingHeader factory (returns a "container" with same API) ===
+	local function makeCollapsingHeader(parent, headerName)
+		headerName = headerName or "Section"
+
+		-- Контейнер-обёртка, растёт по высоте
+		local HeaderRoot = Create("Frame", {
+			Name = headerName .. "CollapsingHeader",
+			BackgroundTransparency = 1, BorderSizePixel = 0,
+			Size = UDim2.new(1, 0, 0, 0),
+			AutomaticSize = Enum.AutomaticSize.Y
+		}, parent)
+		Create("UIListLayout", {
+			Padding = UDim.new(0, 1),
+			SortOrder = Enum.SortOrder.LayoutOrder,
+			FillDirection = Enum.FillDirection.Vertical
+		}, HeaderRoot)
+
+		-- Шапка (синяя полоса, как в конвертере)
+		local HeaderRow = Create("Frame", {
+			Name = "HeaderRow", BorderSizePixel = 0,
+			BackgroundColor3 = Color3.fromRGB(55, 87, 129),
+			Size = UDim2.new(1, 0, 0, 32)
+		}, HeaderRoot)
+		Create("UICorner", { CornerRadius = UDim.new(0, 2) }, HeaderRow)
+
+		local ShownLbl = Create("TextLabel", {
+			Name = "ShownButton", BackgroundTransparency = 1,
+			Size = UDim2.new(0.064, 0, 0.96, 0),
+			Position = UDim2.new(0, 6, 0, 0),
+			FontFace = FONT, Text = "▼",
+			TextColor3 = Color3.fromRGB(255, 255, 255),
+			TextSize = 14, TextXAlignment = Enum.TextXAlignment.Left,
+			Parent = HeaderRow
+		})
+
+		local TitleLbl = Create("TextLabel", {
+			Name = "Title", BackgroundTransparency = 1,
+			Size = UDim2.new(1, -30, 1, 0),
+			Position = UDim2.new(0, 30, 0, 0),
+			FontFace = FONT, Text = headerName,
+			TextColor3 = Color3.fromRGB(255, 255, 255),
+			TextSize = 14, TextXAlignment = Enum.TextXAlignment.Left,
+			Parent = HeaderRow
+		})
+
+		local ClickArea = Create("TextButton", {
+			Name = "ClickArea", BackgroundTransparency = 1,
+			Size = UDim2.new(1, 0, 1, 0), Text = "",
+			Parent = HeaderRow
+		})
+
+		-- Контейнер для элементов
+		local GroupHolder = Create("Frame", {
+			Name = "GroupHolder", BackgroundTransparency = 1,
+			BorderSizePixel = 0,
+			Size = UDim2.new(1, 0, 0, 0),
+			AutomaticSize = Enum.AutomaticSize.Y,
+			ClipsDescendants = false
+		}, HeaderRoot)
+		Create("UIListLayout", {
+			Padding = UDim.new(0, 1),
+			SortOrder = Enum.SortOrder.LayoutOrder
+		}, GroupHolder)
+
+		local isOpen = true
+		ClickArea.MouseButton1Click:Connect(function()
+			isOpen = not isOpen
+			GroupHolder.Visible = isOpen
+			ShownLbl.Text = isOpen and "▼" or "▶"
+		end)
+
+		local CH = {}
+		function CH:AddToggle(id, opts) return makeToggle(GroupHolder, opts.Text, opts.Default, opts.Callback) end
+		function CH:AddSlider(id, opts) return makeSlider(GroupHolder, opts.Text, opts.Min, opts.Max, opts.Default, opts.Callback) end
+		function CH:AddButton(opts) return makeButton(GroupHolder, opts.Text, opts.Func) end
+		function CH:AddLabel(text) return makeLabel(GroupHolder, text) end
+		function CH:AddInfo(text) return makeInfo(GroupHolder, text) end
+		function CH:AddWarning(text) return makeWarning(GroupHolder, text) end
+		function CH:AddDropdown(id, opts) return makeDropdown(GroupHolder, opts.Text, opts.Values, opts.Callback) end
+		function CH:AddInput(id, opts) return makeInput(GroupHolder, opts.Text, opts.Default, opts.Placeholder, opts.Callback) end
+		function CH:SetOpen(state)
+			isOpen = not not state
+			GroupHolder.Visible = isOpen
+			ShownLbl.Text = isOpen and "▼" or "▶"
+		end
+		function CH:SetTitle(newTitle) TitleLbl.Text = newTitle end
+		return CH
+	end
+
 	-- === Tab ===
 	function Window:CreateTab(tabName)
 		local Tab = {}
 
-		local TabButton = Create("TextLabel", {
-			Name = tabName .. "Button", BorderSizePixel = 0, TextSize = 12,
-			TextXAlignment = Enum.TextXAlignment.Left,
-			FontFace = FONT, TextColor3 = Color3.fromRGB(169, 169, 169),
+		-- Кнопка-таб в горизонтальной навигации
+		local TabButton = Create("TextButton", {
+			Name = tabName .. "Button",
+			BackgroundColor3 = Color3.fromRGB(55, 87, 129),
 			BackgroundTransparency = 1,
-			Size = UDim2.new(1, 0, 0, 30),
-			Text = tabName
+			BorderSizePixel = 0,
+			Size = UDim2.new(0, 90, 1, 0),
+			AutoButtonColor = false,
+			FontFace = FONT,
+			Text = tabName,
+			TextColor3 = Color3.fromRGB(169, 169, 169),
+			TextSize = 14
 		}, ButtonHolder)
-		Create("UIPadding", { PaddingLeft = UDim.new(0, 26) }, TabButton)
+		Create("UICorner", { CornerRadius = UDim.new(0, 2) }, TabButton)
 
+		-- Контент-страница
 		local TabContent = Create("ScrollingFrame", {
-			Name = tabName .. "Tab", BorderSizePixel = 0,
-			BackgroundTransparency = 1, Selectable = false,
+			Name = tabName .. "Tab",
+			BorderSizePixel = 0,
+			BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+			BackgroundTransparency = 1,
+			Selectable = false,
 			Size = UDim2.new(1, 0, 1, 0),
-			ScrollBarThickness = 0, Visible = false,
+			Position = UDim2.new(0, 0, 0, 0),
+			BorderColor3 = Color3.fromRGB(0, 0, 0),
+			ScrollBarThickness = 3,
+			ScrollBarImageColor3 = Color3.fromRGB(55, 87, 129),
+			Visible = false,
 			CanvasSize = UDim2.new(0, 0, 0, 0),
 			AutomaticCanvasSize = Enum.AutomaticSize.Y,
-			ScrollBarImageColor3 = Color3.fromRGB(55, 87, 129)
+			Parent = ContentContainer
 		}, ContentContainer)
 		Create("UIPadding", {
-			PaddingTop = UDim.new(0, 6), PaddingRight = UDim.new(0, 6),
-			PaddingLeft = UDim.new(0, 6), PaddingBottom = UDim.new(0, 6)
+			PaddingTop = UDim.new(0, 4),
+			PaddingRight = UDim.new(0, 4),
+			PaddingLeft = UDim.new(0, 4),
+			PaddingBottom = UDim.new(0, 4)
 		}, TabContent)
-		Create("UIListLayout", { Padding = UDim.new(0, 2), SortOrder = Enum.SortOrder.LayoutOrder }, TabContent)
+		Create("UIListLayout", {
+			Padding = UDim.new(0, 1),
+			SortOrder = Enum.SortOrder.LayoutOrder
+		}, TabContent)
 
-		TabButton.InputBegan:Connect(function(input)
-			if input.UserInputType == Enum.UserInputType.MouseButton1 then
-				for _, otherTab in pairs(Window.Tabs) do
-					otherTab.Button.TextColor3 = Color3.fromRGB(169, 169, 169)
-					otherTab.Button.BackgroundTransparency = 1
-					otherTab.Content.Visible = false
-				end
-				TabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-				TabButton.BackgroundTransparency = 0.9
-				TabContent.Visible = true
-				Window.ActiveTab = Tab
+		TabButton.MouseButton1Click:Connect(function()
+			for _, otherTab in pairs(Window.Tabs) do
+				otherTab.Button.TextColor3 = Color3.fromRGB(169, 169, 169)
+				otherTab.Button.BackgroundTransparency = 1
+				otherTab.Content.Visible = false
 			end
+			TabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+			TabButton.BackgroundTransparency = 0.8
+			TabContent.Visible = true
+			Window.ActiveTab = Tab
 		end)
 
 		if not Window.ActiveTab then
 			TabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-			TabButton.BackgroundTransparency = 0.9
+			TabButton.BackgroundTransparency = 0.8
 			TabContent.Visible = true
 			Window.ActiveTab = Tab
 		end
@@ -480,49 +606,40 @@ function Library:new(options)
 		function Tab:CreateSlider(text, min, max, default, cb) return makeSlider(TabContent, text, min, max, default, cb) end
 		function Tab:CreateDropdown(text, values, cb) return makeDropdown(TabContent, text, values, cb) end
 		function Tab:CreateInput(text, default, placeholder, cb) return makeInput(TabContent, text, default, placeholder, cb) end
+		function Tab:CreateCollapsingHeader(name) return makeCollapsingHeader(TabContent, name) end
 
-		-- === Two-column layout для Groupbox ===
-		local ColumnsFrame = Create("Frame", {
-			Name = "Columns", BackgroundTransparency = 1,
-			Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y,
-			Parent = TabContent
-		})
-		local LeftColumn = Create("Frame", {
-			Name = "Left", BackgroundTransparency = 1,
-			Size = UDim2.new(0.5, -3, 0, 0), Position = UDim2.new(0, 0, 0, 0),
-			AutomaticSize = Enum.AutomaticSize.Y, Parent = ColumnsFrame
-		})
-		Create("UIListLayout", { Padding = UDim.new(0, 6), SortOrder = Enum.SortOrder.LayoutOrder }, LeftColumn)
-
-		local RightColumn = Create("Frame", {
-			Name = "Right", BackgroundTransparency = 1,
-			Size = UDim2.new(0.5, -3, 0, 0), Position = UDim2.new(0.5, 3, 0, 0),
-			AutomaticSize = Enum.AutomaticSize.Y, Parent = ColumnsFrame
-		})
-		Create("UIListLayout", { Padding = UDim.new(0, 6), SortOrder = Enum.SortOrder.LayoutOrder }, RightColumn)
-
-		local columnOrder = 0
-		local function makeGroupbox(name, side)
-			columnOrder = columnOrder + 1
-			local Column = (side == "left") and LeftColumn or RightColumn
-
+		-- === Groupbox-совместимость (одна колонка, как в конвертере) ===
+		local groupOrder = 0
+		local function makeGroupbox(name)
+			groupOrder = groupOrder + 1
 			local GroupFrame = Create("Frame", {
 				Name = name .. "Group", BackgroundTransparency = 1,
-				Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y,
-				LayoutOrder = columnOrder, Parent = Column
-			})
-			Create("TextLabel", {
-				Size = UDim2.new(1, 0, 0, 20), BackgroundTransparency = 1,
-				Text = "  " .. name, TextColor3 = Color3.fromRGB(150, 180, 220),
-				Font = Enum.Font.GothamBold, TextSize = 13,
-				TextXAlignment = Enum.TextXAlignment.Left, Parent = GroupFrame
-			})
+				Size = UDim2.new(1, 0, 0, 0),
+				AutomaticSize = Enum.AutomaticSize.Y,
+				LayoutOrder = groupOrder
+			}, TabContent)
+			Create("UIListLayout", {
+				Padding = UDim.new(0, 1),
+				SortOrder = Enum.SortOrder.LayoutOrder
+			}, GroupFrame)
+
+			if name and name ~= "" then
+				Create("TextLabel", {
+					Size = UDim2.new(1, 0, 0, 20), BackgroundTransparency = 1,
+					Text = "  " .. name, TextColor3 = Color3.fromRGB(150, 180, 220),
+					Font = Enum.Font.GothamBold, TextSize = 13,
+					TextXAlignment = Enum.TextXAlignment.Left,
+					Parent = GroupFrame
+				})
+			end
+
 			local Inner = Create("Frame", {
 				Name = "Inner", BackgroundTransparency = 1,
-				Size = UDim2.new(1, 0, 0, 0), Position = UDim2.new(0, 0, 0, 20),
-				AutomaticSize = Enum.AutomaticSize.Y, Parent = GroupFrame
+				Size = UDim2.new(1, 0, 0, 0),
+				AutomaticSize = Enum.AutomaticSize.Y,
+				Parent = GroupFrame
 			})
-			Create("UIListLayout", { Padding = UDim.new(0, 2), SortOrder = Enum.SortOrder.LayoutOrder }, Inner)
+			Create("UIListLayout", { Padding = UDim.new(0, 1), SortOrder = Enum.SortOrder.LayoutOrder }, Inner)
 
 			local GB = {}
 			function GB:AddToggle(id, opts) return makeToggle(Inner, opts.Text, opts.Default, opts.Callback) end
@@ -536,94 +653,9 @@ function Library:new(options)
 			return GB
 		end
 
-		function Tab:AddLeftGroupbox(name) return makeGroupbox(name, "left") end
-		function Tab:AddRightGroupbox(name) return makeGroupbox(name, "right") end
-
-		-- === CollapsingHeader ===
-		function Tab:CreateCollapsingHeader(headerName)
-			headerName = headerName or "Section"
-
-			local HeaderFrame = Create("Frame", {
-				Name = headerName .. "CollapsingHeader",
-				BackgroundTransparency = 1,
-				Size = UDim2.new(1, 0, 0, 0),
-				AutomaticSize = Enum.AutomaticSize.Y,
-				Parent = TabContent
-			})
-			Create("UIListLayout", { Padding = UDim.new(0, 2), SortOrder = Enum.SortOrder.LayoutOrder }, HeaderFrame)
-
-			-- Верхняя полоса-заголовок (клик по ней сворачивает)
-			local HeaderRow = Create("Frame", {
-				Name = "HeaderRow", BorderSizePixel = 0,
-				BackgroundColor3 = Color3.fromRGB(55, 87, 129),
-				Size = UDim2.new(1, 0, 0, 32),
-				Parent = HeaderFrame
-			})
-			Create("UICorner", { CornerRadius = UDim.new(0, 4) }, HeaderRow)
-
-			local ShownBtn = Create("TextLabel", {
-				Name = "ShownButton", BackgroundTransparency = 1,
-				Position = UDim2.new(0, 6, 0, 0),
-				Size = UDim2.new(0, 20, 1, 0),
-				FontFace = FONT, Text = "▼",
-				TextColor3 = Color3.fromRGB(255, 255, 255),
-				TextSize = 14, Parent = HeaderRow
-			})
-
-			local TitleLbl = Create("TextLabel", {
-				Name = "Title", BackgroundTransparency = 1,
-				Position = UDim2.new(0, 30, 0, 0),
-				Size = UDim2.new(1, -30, 1, 0),
-				FontFace = FONT, Text = headerName,
-				TextColor3 = Color3.fromRGB(255, 255, 255),
-				TextSize = 14,
-				TextXAlignment = Enum.TextXAlignment.Left,
-				Parent = HeaderRow
-			})
-
-			-- Клик по всей шапке
-			local ClickArea = Create("TextButton", {
-				Name = "ClickArea", BackgroundTransparency = 1,
-				Size = UDim2.new(1, 0, 1, 0), Text = "",
-				Parent = HeaderRow
-			})
-
-			-- Контейнер для элементов
-			local GroupHolder = Create("Frame", {
-				Name = "GroupHolder", BackgroundTransparency = 1,
-				Size = UDim2.new(1, 0, 0, 0),
-				AutomaticSize = Enum.AutomaticSize.Y,
-				Parent = HeaderFrame
-			})
-			Create("UIListLayout", { Padding = UDim.new(0, 2), SortOrder = Enum.SortOrder.LayoutOrder }, GroupHolder)
-
-			local isOpen = true
-			ClickArea.MouseButton1Click:Connect(function()
-				isOpen = not isOpen
-				GroupHolder.Visible = isOpen
-				ShownBtn.Text = isOpen and "▼" or "▶"
-			end)
-
-			-- Обёртка с теми же методами, что у Groupbox
-			local CH = {}
-			function CH:AddToggle(id, opts) return makeToggle(GroupHolder, opts.Text, opts.Default, opts.Callback) end
-			function CH:AddSlider(id, opts) return makeSlider(GroupHolder, opts.Text, opts.Min, opts.Max, opts.Default, opts.Callback) end
-			function CH:AddButton(opts) return makeButton(GroupHolder, opts.Text, opts.Func) end
-			function CH:AddLabel(text) return makeLabel(GroupHolder, text) end
-			function CH:AddInfo(text) return makeInfo(GroupHolder, text) end
-			function CH:AddWarning(text) return makeWarning(GroupHolder, text) end
-			function CH:AddDropdown(id, opts) return makeDropdown(GroupHolder, opts.Text, opts.Values, opts.Callback) end
-			function CH:AddInput(id, opts) return makeInput(GroupHolder, opts.Text, opts.Default, opts.Placeholder, opts.Callback) end
-
-			-- Дополнительно: можно раскрыть/свернуть программно
-			function CH:SetOpen(state)
-				isOpen = not not state
-				GroupHolder.Visible = isOpen
-				ShownBtn.Text = isOpen and "▼" or "▶"
-			end
-
-			return CH
-		end
+		-- AddLeft/AddRight в новой раскладке = один и тот же столбец
+		function Tab:AddLeftGroupbox(name) return makeGroupbox(name) end
+		function Tab:AddRightGroupbox(name) return makeGroupbox(name) end
 
 		return Tab
 	end
