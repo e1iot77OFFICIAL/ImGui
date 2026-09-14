@@ -216,13 +216,8 @@ function Library:new(options)
 		return LabelFrame
 	end
 
-	local function makeInfo(parent, text)
-		return makeLabel(parent, text, Color3.fromRGB(255, 255, 16))
-	end
-
-	local function makeWarning(parent, text)
-		return makeLabel(parent, text, Color3.fromRGB(255, 60, 60))
-	end
+	local function makeInfo(parent, text) return makeLabel(parent, text, Color3.fromRGB(255, 255, 16)) end
+	local function makeWarning(parent, text) return makeLabel(parent, text, Color3.fromRGB(255, 60, 60)) end
 
 	local function makeToggle(parent, toggleText, default, callback)
 		local ToggleFrame = Create("Frame", {
@@ -459,27 +454,21 @@ function Library:new(options)
 		function Tab:CreateInput(text, default, placeholder, cb) return makeInput(TabContent, text, default, placeholder, cb) end
 
 		local ColumnsFrame = Create("Frame", {
-			Name = "Columns",
-			BackgroundTransparency = 1,
-			Size = UDim2.new(1, 0, 0, 0),
-			AutomaticSize = Enum.AutomaticSize.Y,
+			Name = "Columns", BackgroundTransparency = 1,
+			Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y,
 			Parent = TabContent
 		})
 		local LeftColumn = Create("Frame", {
 			Name = "Left", BackgroundTransparency = 1,
-			Size = UDim2.new(0.5, -3, 0, 0),
-			Position = UDim2.new(0, 0, 0, 0),
-			AutomaticSize = Enum.AutomaticSize.Y,
-			Parent = ColumnsFrame
+			Size = UDim2.new(0.5, -3, 0, 0), Position = UDim2.new(0, 0, 0, 0),
+			AutomaticSize = Enum.AutomaticSize.Y, Parent = ColumnsFrame
 		})
 		Create("UIListLayout", { Padding = UDim.new(0, 6), SortOrder = Enum.SortOrder.LayoutOrder }, LeftColumn)
 
 		local RightColumn = Create("Frame", {
 			Name = "Right", BackgroundTransparency = 1,
-			Size = UDim2.new(0.5, -3, 0, 0),
-			Position = UDim2.new(0.5, 3, 0, 0),
-			AutomaticSize = Enum.AutomaticSize.Y,
-			Parent = ColumnsFrame
+			Size = UDim2.new(0.5, -3, 0, 0), Position = UDim2.new(0.5, 3, 0, 0),
+			AutomaticSize = Enum.AutomaticSize.Y, Parent = ColumnsFrame
 		})
 		Create("UIListLayout", { Padding = UDim.new(0, 6), SortOrder = Enum.SortOrder.LayoutOrder }, RightColumn)
 
@@ -489,35 +478,22 @@ function Library:new(options)
 			local Column = (side == "left") and LeftColumn or RightColumn
 
 			local GroupFrame = Create("Frame", {
-				Name = name .. "Group",
-				BackgroundTransparency = 1,
-				Size = UDim2.new(1, 0, 0, 0),
-				AutomaticSize = Enum.AutomaticSize.Y,
-				LayoutOrder = columnOrder,
-				Parent = Column
+				Name = name .. "Group", BackgroundTransparency = 1,
+				Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y,
+				LayoutOrder = columnOrder, Parent = Column
 			})
 			Create("TextLabel", {
-				Size = UDim2.new(1, 0, 0, 20),
-				BackgroundTransparency = 1,
-				Text = "  " .. name,
-				TextColor3 = Color3.fromRGB(150, 180, 220),
-				Font = Enum.Font.GothamBold,
-				TextSize = 13,
-				TextXAlignment = Enum.TextXAlignment.Left,
-				Parent = GroupFrame
+				Size = UDim2.new(1, 0, 0, 20), BackgroundTransparency = 1,
+				Text = "  " .. name, TextColor3 = Color3.fromRGB(150, 180, 220),
+				Font = Enum.Font.GothamBold, TextSize = 13,
+				TextXAlignment = Enum.TextXAlignment.Left, Parent = GroupFrame
 			})
 			local Inner = Create("Frame", {
-				Name = "Inner",
-				BackgroundTransparency = 1,
-				Size = UDim2.new(1, 0, 0, 0),
-				Position = UDim2.new(0, 0, 0, 20),
-				AutomaticSize = Enum.AutomaticSize.Y,
-				Parent = GroupFrame
+				Name = "Inner", BackgroundTransparency = 1,
+				Size = UDim2.new(1, 0, 0, 0), Position = UDim2.new(0, 0, 0, 20),
+				AutomaticSize = Enum.AutomaticSize.Y, Parent = GroupFrame
 			})
-			Create("UIListLayout", {
-				Padding = UDim.new(0, 2),
-				SortOrder = Enum.SortOrder.LayoutOrder
-			}, Inner)
+			Create("UIListLayout", { Padding = UDim.new(0, 2), SortOrder = Enum.SortOrder.LayoutOrder }, Inner)
 
 			local GB = {}
 			function GB:AddToggle(id, opts) return makeToggle(Inner, opts.Text, opts.Default, opts.Callback) end
@@ -542,61 +518,4 @@ function Library:new(options)
 	return Window
 end
 
--- Example Usage
-local MyWindow = Library:new({
-	name = "ImGui Library",
-	size = UDim2.new(0, 560, 0, 620),
-	keybind = Enum.KeyCode.RightShift
-})
-
-local MainTab = MyWindow:CreateTab("Main")
-local SettingsTab = MyWindow:CreateTab("Settings")
-
-local mainLeft  = MainTab:AddLeftGroupbox("Controls")
-local mainRight = MainTab:AddRightGroupbox("Info")
-
-mainLeft:AddButton({
-	Text = "Click Me",
-	Func = function()
-		MyWindow:Notify("Button clicked!", 3)
-	end
-})
-
-mainLeft:AddToggle("FeatureToggle", {
-	Text = "Enable Feature",
-	Default = false,
-	Callback = function(state)
-		print("Toggle:", state)
-	end
-})
-
-mainLeft:AddSlider("WalkSpeedSlider", {
-	Text = "Walk Speed",
-	Min = 16, Max = 200, Default = 16,
-	Callback = function(value)
-		local char = players.LocalPlayer.Character
-		local hum = char and char:FindFirstChildOfClass("Humanoid")
-		if hum then hum.WalkSpeed = value end
-	end
-})
-
-mainLeft:AddDropdown("OptionDropdown", {
-	Text = "Select Option",
-	Values = {"Option 1", "Option 2", "Option 3"},
-	Callback = function(selected) print("Selected:", selected) end
-})
-
-mainLeft:AddInput("NameInput", {
-	Text = "Name",
-	Default = "",
-	Placeholder = "Type here...",
-	Callback = function(text) print("Input:", text) end
-})
-
-mainRight:AddInfo("This is an info message.")
-mainRight:AddWarning("This is a warning!")
-mainRight:AddLabel("Just a plain text label.")
-
-SettingsTab:CreateButton("Reset Settings", function()
-	MyWindow:Notify("Settings reset.", 3)
-end)
+return Library
