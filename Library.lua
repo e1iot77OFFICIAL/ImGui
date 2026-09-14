@@ -584,6 +584,378 @@ function Library:new(options)
 	end
 
 	--------------------------------------------------------------
+-- ColorPicker
+--------------------------------------------------------------
+local function makeColorPicker(parent, text, default, callback)
+	text = text or "Color"
+	default = default or Color3.fromRGB(255, 255, 255)
+	callback = callback or function() end
+
+	local h, s, v = Color3.toHSV(default)
+	local hue, sat, val = h, s, v
+
+	-- Root row (как DropDown: 32px, синий, кликабельный)
+	local root = Create("Frame", {
+		Name = "ColorPicker", BorderSizePixel = 0,
+		BackgroundColor3 = Color3.fromRGB(55, 87, 129),
+		ClipsDescendants = true,
+		Size = UDim2.new(1, 0, 0, 32),
+		BorderColor3 = Color3.fromRGB(0, 0, 0)
+	}, parent)
+
+	local title = Create("TextLabel", {
+		Name = "Title", BorderSizePixel = 0, TextSize = 14,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+		FontFace = FONT_ROBOTO,
+		TextColor3 = Color3.fromRGB(255, 255, 255),
+		BackgroundTransparency = 1,
+		Size = UDim2.new(1, -70, 1, 0),
+		Text = text
+	}, root)
+	Create("UIPadding", { PaddingLeft = UDim.new(0, 6) }, title)
+
+	-- Превью-квадратик текущего цвета справа
+	local preview = Create("Frame", {
+		Name = "Preview", BorderSizePixel = 0,
+		BackgroundColor3 = default,
+		AnchorPoint = Vector2.new(1, 0),
+		Size = UDim2.new(0, 20, 0, 20),
+		Position = UDim2.new(0.98892, 0, 0.03125, 5)
+	}, root)
+	Create("UICorner", { CornerRadius = UDim.new(0, 3) }, preview)
+
+	-- Клик по шапке — открыть/закрыть
+	local headerClick = Create("TextButton", {
+		BackgroundTransparency = 1,
+		Size = UDim2.new(1, 0, 0, 32),
+		Text = "", Parent = root
+	}, root)
+
+	-- Тело (появляется при открытии)
+	local body = Create("Frame", {
+		Name = "Body", BackgroundTransparency = 1,
+		Position = UDim2.new(0, 0, 0, 32),
+		Size = UDim2.new(1, 0, 0, 120)
+	}, root)
+
+	-- SV-квадрат (Hue x Sat)
+	local svFrame = Create("Frame", {
+		Name = "SV", BorderSizePixel = 0,
+		BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+		Position = UDim2.new(0, 10, 0, 6),
+		Size = UDim2.new(1, -70, 0, 90)
+	}, body)
+	Create("UICorner", { CornerRadius = UDim.new(0, 3) }, svFrame)
+
+	-- Белый градиент (сверху вниз): 1 → 0 по S
+	local whiteGrad = Create("Frame", {
+		BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+		BackgroundTransparency = 0,
+		BorderSizePixel = 0,
+		Size = UDim2.new(1, 0, 1, 0)
+	}, svFrame)
+	local wGrad = Create("UIGradient", {
+		Color = ColorSequence.new(Color3.fromRGB(255, 255, 255), Color3.fromRGB(255, 255, 255)),
+		Transparency = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 0),
+			NumberSequenceKeypoint.new(1, 1)
+		}),
+		Rotation = 0
+	}, whiteGrad)
+	Create("UICorner", { CornerRadius = UDim.new(0, 3) }, whiteGrad)
+
+	-- Чёрный градиент (сверху-вниз уже применён, теперь чёрный слева-направо —> по H)
+	local hueGrad = Create("Frame", {
+		BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+		BackgroundTransparency = 1,
+		BorderSizePixel = 0,
+		Size = UDim2.new(1, 0, 1, 0),
+		ZIndex = 2
+	}, svFrame)
+	Create("UICorner", { CornerRadius = UDim.new(0, 3) }, hueGrad)
+
+	-- Сделаем Hue через UIGradient с HSV-последовательностью (7 ключевых точек)
+	local hueSeq = ColorSequence.new({
+		ColorSequenceKeypoint.new(0.00, Color3.fromHSV(0.00, 1, 1)),
+		ColorSequenceKeypoint.new(0.17, Color3.fromHSV(0.17, 1, 1)),
+		ColorSequenceKeypoint.new(0.33, Color3.fromHSV(0.33, 1, 1)),
+		ColorSequenceKeypoint.new(0.50, Color3.fromHSV(0.50, 1, 1)),
+		ColorSequenceKeypoint.new(0.67, Color3.fromHSV(0.67, 1, 1)),
+		ColorSequenceKeypoint.new(0.83, Color3.fromHSV(0.83, 1, 1)),
+		ColorSequenceKeypoint.new(1.00, Color3.fromHSV(1.00, 1, 1))
+	})
+	local hGrad = Create("UIGradient", {
+		Color = hueSeq,
+		Transparency = NumberSequence.new(0),
+		Rotation = 90
+	}, hueGrad)
+	hueGrad.BackgroundTransparency = 0
+	hueGrad.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+
+	-- Маркер позиции (кружок)
+	local svMarker = Create("Frame", {
+		Name = "Marker", BorderSizePixel = 0,
+		BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+		BackgroundTransparency = 0.5,
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Size = UDim2.new(0, 10, 0, 10),
+		ZIndex = 5
+	}, svFrame)
+	Create("UICorner", { CornerRadius = UDim.new(1, 0) }, svMarker)
+	Create("UIStroke", { Color = Color3.fromRGB(0, 0, 0), Thickness = 1 }, svMarker)
+
+	-- Brightness-полоса (справа)
+	local valBar = Create("Frame", {
+		Name = "Value", BorderSizePixel = 0,
+		BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+		AnchorPoint = Vector2.new(1, 0),
+		Position = UDim2.new(1, -10, 0, 6),
+		Size = UDim2.new(0, 16, 0, 90)
+	}, body)
+	Create("UICorner", { CornerRadius = UDim.new(0, 3) }, valBar)
+	local vGrad = Create("UIGradient", {
+		Color = ColorSequence.new(Color3.fromRGB(255, 255, 255), Color3.fromRGB(0, 0, 0)),
+		Rotation = 90
+	}, valBar)
+
+	local vMarker = Create("Frame", {
+		Name = "Marker", BorderSizePixel = 0,
+		BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+		BackgroundTransparency = 0.5,
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Size = UDim2.new(0, 10, 0, 10),
+		Position = UDim2.new(0.5, 0, 1, 0),
+		ZIndex = 5
+	}, valBar)
+	Create("UICorner", { CornerRadius = UDim.new(1, 0) }, vMarker)
+	Create("UIStroke", { Color = Color3.fromRGB(0, 0, 0), Thickness = 1 }, vMarker)
+
+	-- Поле Hex + кнопка Rainbow
+	local hexBox = Create("TextBox", {
+		Name = "HexBox", BorderSizePixel = 0, TextSize = 12,
+		BackgroundColor3 = Color3.fromRGB(45, 70, 105),
+		TextColor3 = Color3.fromRGB(255, 255, 255),
+		Font = Enum.Font.Gotham,
+		Text = "#FFFFFF",
+		Position = UDim2.new(0, 10, 0, 100),
+		Size = UDim2.new(1, -80, 0, 20),
+		ClearTextOnFocus = false
+	}, body)
+	Create("UICorner", { CornerRadius = UDim.new(0, 3) }, hexBox)
+
+	local rainbowBtn = Create("TextButton", {
+		Name = "RainbowBtn", BorderSizePixel = 0, TextSize = 12,
+		BackgroundColor3 = Color3.fromRGB(74, 139, 226),
+		TextColor3 = Color3.fromRGB(255, 255, 255),
+		FontFace = FONT_ROBOTO,
+		Text = "Rainbow",
+		AnchorPoint = Vector2.new(1, 0),
+		Position = UDim2.new(1, -10, 0, 100),
+		Size = UDim2.new(0, 60, 0, 20)
+	}, body)
+	Create("UICorner", { CornerRadius = UDim.new(0, 3) }, rainbowBtn)
+
+	-- Helper: конвертирует HSV в Color3 и обновляет UI
+	local function applyColor()
+		local c = Color3.fromHSV(hue, sat, val)
+		preview.BackgroundColor3 = c
+		hexBox.Text = string.format("#%02X%02X%02X",
+			math.floor(c.R * 255),
+			math.floor(c.G * 255),
+			math.floor(c.B * 255))
+		callback(c)
+	end
+
+	local function updateMarkers()
+		svMarker.Position = UDim2.new(sat, 0, 1 - val, 0)
+		vMarker.Position = UDim2.new(0.5, 0, val, 0)
+		svFrame.BackgroundColor3 = Color3.fromHSV(hue, 1, 1)
+	end
+
+	updateMarkers()
+
+	-- Взаимодействие с SV
+	local svDragging = false
+	svFrame.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			svDragging = true
+			local mx = input.Position.X - svFrame.AbsolutePosition.X
+			local my = input.Position.Y - svFrame.AbsolutePosition.Y
+			sat = math.clamp(mx / svFrame.AbsoluteSize.X, 0, 1)
+			val = math.clamp(1 - my / svFrame.AbsoluteSize.Y, 0, 1)
+			updateMarkers()
+			applyColor()
+		end
+	end)
+
+	-- Взаимодействие с Value-полосой
+	local vDragging = false
+	valBar.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			vDragging = true
+			local my = input.Position.Y - valBar.AbsolutePosition.Y
+			val = math.clamp(1 - my / valBar.AbsoluteSize.Y, 0, 1)
+			updateMarkers()
+			applyColor()
+		end
+	end)
+
+	UIS.InputChanged:Connect(function(input)
+		if input.UserInputType ~= Enum.UserInputType.MouseMovement then return end
+		if svDragging then
+			local mx = input.Position.X - svFrame.AbsolutePosition.X
+			local my = input.Position.Y - svFrame.AbsolutePosition.Y
+			sat = math.clamp(mx / svFrame.AbsoluteSize.X, 0, 1)
+			val = math.clamp(1 - my / svFrame.AbsoluteSize.Y, 0, 1)
+			updateMarkers()
+			applyColor()
+		end
+		if vDragging then
+			local my = input.Position.Y - valBar.AbsolutePosition.Y
+			val = math.clamp(1 - my / valBar.AbsoluteSize.Y, 0, 1)
+			updateMarkers()
+			applyColor()
+		end
+	end)
+
+	UIS.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			svDragging = false
+			vDragging = false
+		end
+	end)
+
+	-- Hue через горизонтальный скролл внутри svFrame по движению мыши с зажатым Shift
+	-- Проще: отдельный тонкий ряд HueBar под SV
+	local hueBar = Create("Frame", {
+		Name = "HueBar", BorderSizePixel = 0,
+		BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+		Position = UDim2.new(0, 10, 0, 100),
+		Size = UDim2.new(1, -80, 0, 6)
+	}, body)
+	hueBar.Position = UDim2.new(0, 10, 0, 100)
+	-- сдвинем hexBox ниже
+	hexBox.Position = UDim2.new(0, 10, 0, 112)
+	rainbowBtn.Position = UDim2.new(1, -10, 0, 112)
+	body.Size = UDim2.new(1, 0, 0, 140)
+
+	local hueGrad2 = Create("UIGradient", {
+		Color = hueSeq,
+		Rotation = 0
+	}, hueBar)
+	Create("UICorner", { CornerRadius = UDim.new(0, 3) }, hueBar)
+
+	local hueMarker = Create("Frame", {
+		BorderSizePixel = 0,
+		BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+		BackgroundTransparency = 0.5,
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Size = UDim2.new(0, 6, 1, 4),
+		Position = UDim2.new(hue, 0, 0.5, 0),
+		ZIndex = 5
+	}, hueBar)
+	Create("UICorner", { CornerRadius = UDim.new(1, 0) }, hueMarker)
+	Create("UIStroke", { Color = Color3.fromRGB(0, 0, 0), Thickness = 1 }, hueMarker)
+
+	local hueDragging = false
+	hueBar.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			hueDragging = true
+			local mx = input.Position.X - hueBar.AbsolutePosition.X
+			hue = math.clamp(mx / hueBar.AbsoluteSize.X, 0, 1)
+			hueMarker.Position = UDim2.new(hue, 0, 0.5, 0)
+			updateMarkers()
+			applyColor()
+		end
+	end)
+	UIS.InputChanged:Connect(function(input)
+		if hueDragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+			local mx = input.Position.X - hueBar.AbsolutePosition.X
+			hue = math.clamp(mx / hueBar.AbsoluteSize.X, 0, 1)
+			hueMarker.Position = UDim2.new(hue, 0, 0.5, 0)
+			updateMarkers()
+			applyColor()
+		end
+	end)
+	UIS.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			hueDragging = false
+		end
+	end)
+
+	-- Hex input
+	hexBox.FocusLost:Connect(function(enter)
+		if not enter then return end
+		local hex = hexBox.Text:gsub("#", "")
+		if #hex == 6 then
+			local r = tonumber(hex:sub(1,2), 16)
+			local g = tonumber(hex:sub(3,4), 16)
+			local b = tonumber(hex:sub(5,6), 16)
+			if r and g and b then
+				local c = Color3.fromRGB(r, g, b)
+				hue, sat, val = Color3.toHSV(c)
+				updateMarkers()
+				hueMarker.Position = UDim2.new(hue, 0, 0.5, 0)
+				applyColor()
+			end
+		end
+	end)
+
+	-- Rainbow toggle
+	local rainbowOn = false
+	local rainbowConn
+	rainbowBtn.MouseButton1Click:Connect(function()
+		rainbowOn = not rainbowOn
+		if rainbowOn then
+			rainbowBtn.BackgroundColor3 = Color3.fromRGB(255, 100, 100)
+			rainbowBtn.Text = "Rainbow ✓"
+			rainbowConn = RunService.RenderStepped:Connect(function()
+				hue = (tick() * 0.3) % 1
+				hueMarker.Position = UDim2.new(hue, 0, 0.5, 0)
+				updateMarkers()
+				applyColor()
+			end)
+		else
+			rainbowBtn.BackgroundColor3 = Color3.fromRGB(74, 139, 226)
+			rainbowBtn.Text = "Rainbow"
+			if rainbowConn then rainbowConn:Disconnect() end
+		end
+	end)
+
+	-- Открытие / закрытие
+	local opened = false
+	local function setOpen(state)
+		opened = state
+		body.Visible = opened
+		root.Size = opened and UDim2.new(1, 0, 0, 32 + body.Size.Y.Offset) or UDim2.new(1, 0, 0, 32)
+	end
+	setOpen(false)
+
+	headerClick.MouseButton1Click:Connect(function()
+		setOpen(not opened)
+	end)
+
+	-- API
+	local CP = {}
+	function CP:Set(color)
+		color = typeof(color) == "Color3" and color or Color3.fromRGB(255, 255, 255)
+		hue, sat, val = Color3.toHSV(color)
+		updateMarkers()
+		hueMarker.Position = UDim2.new(hue, 0, 0.5, 0)
+		applyColor()
+	end
+	function CP:Get()
+		return Color3.fromHSV(hue, sat, val)
+	end
+	function CP:SetOpen(s) setOpen(s) end
+	function CP:Destroy() root:Destroy() end
+
+	applyColor()
+	return CP
+end
+
+	--------------------------------------------------------------
 	-- CollapsingHeader factory
 	--------------------------------------------------------------
 	local function makeCollapsingHeader(parent, headerName)
