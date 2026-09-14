@@ -1,29 +1,33 @@
-local players = game:GetService("Players")
-local runService = game:GetService("RunService")
-local coreGui = game:GetService("CoreGui")
-local userInputService = game:GetService("UserInputService")
+--[=[
+    ImGui Library (converted from @uniquadev output)
+    Visuals: 1-to-1 copy of the converter dump
+]=]
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local CoreGui = game:GetService("CoreGui")
+local UIS = game:GetService("UserInputService")
 
 local Library = {}
 
+local FONT_ROBOTO = Font.new("rbxasset://fonts/families/RobotoMono.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+local FONT_SRC    = Font.new("rbxasset://fonts/families/SourceSansPro.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+local FONT_UBUNTU = Font.new("rbxasset://fonts/families/Ubuntu.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+
 function Library:Init(defaults, options)
 	options = options or {}
-	for key, value in pairs(defaults) do
-		if options[key] == nil then options[key] = value end
+	for k, v in pairs(defaults) do
+		if options[k] == nil then options[k] = v end
 	end
 	return options
 end
 
-local function Create(className, properties, parent)
-	local instance = Instance.new(className)
-	for prop, value in pairs(properties) do
-		instance[prop] = value
-	end
-	if parent then instance.Parent = parent end
-	return instance
+local function Create(class, props, parent)
+	local inst = Instance.new(class)
+	for k, v in pairs(props or {}) do inst[k] = v end
+	if parent then inst.Parent = parent end
+	return inst
 end
-
-local FONT       = Font.new("rbxasset://fonts/families/RobotoMono.json")
-local FONT_LABEL = Font.new("rbxasset://fonts/families/RobotoMono.json")
 
 function Library:new(options)
 	options = self:Init({
@@ -37,106 +41,150 @@ function Library:new(options)
 	Window.ActiveTab = nil
 	Window.Opened = true
 
-	-- === ScreenGui ===
+	--------------------------------------------------------------
+	-- Root ScreenGui
+	--------------------------------------------------------------
 	local ScreenGui = Create("ScreenGui", {
 		Name = "MyLib",
 		ResetOnSpawn = false,
 		ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-	}, runService:IsStudio() and players.LocalPlayer:WaitForChild("PlayerGui") or coreGui)
+	}, RunService:IsStudio() and Players.LocalPlayer:WaitForChild("PlayerGui") or CoreGui)
 
-	-- === Main ===
+	--------------------------------------------------------------
+	-- Main
+	--------------------------------------------------------------
 	local Main = Create("Frame", {
 		Name = "Main", BorderSizePixel = 0,
 		BackgroundColor3 = Color3.fromRGB(36, 38, 37),
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		Size = options.size,
-		Position = UDim2.new(0.5, 0, 0.5, 0)
+		Position = UDim2.new(0.5, 0, 0.5, 0),
+		BorderColor3 = Color3.fromRGB(0, 0, 0)
 	}, ScreenGui)
 	Create("UICorner", { CornerRadius = UDim.new(0, 2) }, Main)
-	Create("UIStroke", { Color = Color3.fromRGB(55, 87, 129), ApplyStrokeMode = Enum.ApplyStrokeMode.Border }, Main)
+	Create("UIStroke", { Color = Color3.fromRGB(55, 87, 129) }, Main)
 
-	-- === TopBar ===
+	--------------------------------------------------------------
+	-- TopBar
+	--------------------------------------------------------------
 	local TopBar = Create("Frame", {
 		Name = "TopBar", BorderSizePixel = 0,
 		BackgroundColor3 = Color3.fromRGB(55, 87, 129),
-		Size = UDim2.new(1, 0, 0, 28)
+		Size = UDim2.new(1, 0, 0, 28),
+		BorderColor3 = Color3.fromRGB(0, 0, 0)
 	}, Main)
 	Create("UICorner", { CornerRadius = UDim.new(0, 2) }, TopBar)
-	Create("UIStroke", { Color = Color3.fromRGB(36, 38, 37), ApplyStrokeMode = Enum.ApplyStrokeMode.Border }, TopBar)
-	Create("Frame", {
+	Create("UIStroke", {
+		Color = Color3.fromRGB(36, 38, 37),
+		ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	}, TopBar)
+
+	local Extension = Create("Frame", {
 		Name = "Extension", BorderSizePixel = 0,
 		BackgroundColor3 = Color3.fromRGB(55, 87, 129),
 		Size = UDim2.new(1, 0, 0, 14),
-		Position = UDim2.new(0, 0, 0, 14)
+		Position = UDim2.new(0, 0, 0, 14),
+		BorderColor3 = Color3.fromRGB(0, 0, 0)
 	}, TopBar)
 
 	local Title = Create("TextLabel", {
-		Name = "Title", BorderSizePixel = 0, TextSize = 14,
-		TextXAlignment = Enum.TextXAlignment.Left,
+		Name = "Title", BorderSizePixel = 0,
+		TextSize = 14, TextXAlignment = Enum.TextXAlignment.Left,
 		BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-		BackgroundTransparency = 1, FontFace = FONT,
+		FontFace = FONT_ROBOTO,
 		TextColor3 = Color3.fromRGB(255, 255, 255),
+		BackgroundTransparency = 1,
 		Size = UDim2.new(0.5, 0, 1, 0),
+		BorderColor3 = Color3.fromRGB(255, 255, 255),
 		Text = options.name
 	}, TopBar)
 	Create("UIPadding", { PaddingLeft = UDim.new(0, 35) }, Title)
 
 	local ExitButton = Create("TextButton", {
-		Name = "ExitButton", BorderSizePixel = 0, TextSize = 14,
+		Name = "ExitButton", BorderSizePixel = 0,
+		TextSize = 14,
 		TextColor3 = Color3.fromRGB(255, 255, 255),
+		BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+		FontFace = FONT_SRC,
 		BackgroundTransparency = 1,
 		Size = UDim2.new(0.056, 0, 1, 0),
-		Position = UDim2.new(0.944, 0, 0, 0),
-		Text = "X", FontFace = FONT
+		BorderColor3 = Color3.fromRGB(0, 0, 0),
+		Text = "X",
+		Position = UDim2.new(0.944, 0, 0, 0)
 	}, TopBar)
 
 	local ShownButton = Create("TextButton", {
-		Name = "ShownButton", BorderSizePixel = 0, TextSize = 14,
+		Name = "ShownButton", BorderSizePixel = 0,
+		TextSize = 14,
 		TextColor3 = Color3.fromRGB(255, 255, 255),
+		BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+		FontFace = FONT_SRC,
 		BackgroundTransparency = 1,
 		Size = UDim2.new(0.056, 0, 1, 0),
-		Position = UDim2.new(0.888, 0, 0, 0),
-		Text = "▼", FontFace = FONT
+		BorderColor3 = Color3.fromRGB(0, 0, 0),
+		Text = "▼",
+		Position = UDim2.new(0.888, 0, 0, 0)
 	}, TopBar)
 
-	-- === Navigation (верхний горизонтальный таб-бар) ===
-	local Navigation = Create("Frame", {
-		Name = "Navigation", BorderSizePixel = 0,
-		BackgroundTransparency = 1,
-		Size = UDim2.new(0.96, 0, 0, 28),
-		Position = UDim2.new(0.022, 0, 0, 32)
-	}, Main)
-	Create("UICorner", { CornerRadius = UDim.new(0, 2) }, Navigation)
-
-	local ButtonHolder = Create("Frame", {
-		Name = "ButtonHolder", BackgroundTransparency = 1,
-		BorderSizePixel = 0,
-		Size = UDim2.new(1, 0, 1, 0)
-	}, Navigation)
-	Create("UIPadding", {
-		PaddingTop = UDim.new(0, 4),
-		PaddingBottom = UDim.new(0, 4),
-		PaddingLeft = UDim.new(0, 4),
-		PaddingRight = UDim.new(0, 4)
-	}, ButtonHolder)
-	Create("UIListLayout", {
-		Padding = UDim.new(0, 4),
-		SortOrder = Enum.SortOrder.LayoutOrder,
-		FillDirection = Enum.FillDirection.Horizontal,
-		VerticalAlignment = Enum.VerticalAlignment.Center
-	}, ButtonHolder)
-
-	-- === ContentContainer (контентная область) ===
+	--------------------------------------------------------------
+	-- ContentContainer
+	--------------------------------------------------------------
 	local ContentContainer = Create("Frame", {
 		Name = "ContentContainer", BorderSizePixel = 0,
 		BackgroundColor3 = Color3.fromRGB(36, 38, 37),
-		Size = UDim2.new(0.964, 0, 1, -66),
-		Position = UDim2.new(0.018, 0, 0, 62),
+		Size = UDim2.new(0.964, 0, 0.83, 28),
+		Position = UDim2.new(0.022, 0, 0.10333, 0),
+		BorderColor3 = Color3.fromRGB(0, 0, 0),
 		BackgroundTransparency = 0.8
 	}, Main)
 	Create("UICorner", { CornerRadius = UDim.new(0, 2) }, ContentContainer)
 
-	-- === ShownButton logic (hide nav + content) ===
+	--------------------------------------------------------------
+	-- Navigation (horizontal tab bar)
+	--------------------------------------------------------------
+	local Navigation = Create("Frame", {
+		Name = "Navigation", BorderSizePixel = 0,
+		BackgroundColor3 = Color3.fromRGB(55, 87, 129),
+		Size = UDim2.new(0.96, 0, 0.005, 28),
+		Position = UDim2.new(0.022, 0, 0.05, 0),
+		BorderColor3 = Color3.fromRGB(0, 0, 0),
+		BackgroundTransparency = 1
+	}, Main)
+	Create("UICorner", { CornerRadius = UDim.new(0, 2) }, Navigation)
+
+	Create("Frame", {
+		Name = "Hide", BorderSizePixel = 0,
+		BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+		Size = UDim2.new(1, 0, 0, 20),
+		BackgroundTransparency = 1
+	}, Navigation)
+	Create("Frame", {
+		Name = "Hide2", BorderSizePixel = 0,
+		BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+		Size = UDim2.new(0, 20, 1, 0),
+		Position = UDim2.new(1, 0, 0, 0),
+		BackgroundTransparency = 1
+	}, Navigation)
+
+	local ButtonHolder = Create("Frame", {
+		Name = "ButtonHolder", BorderSizePixel = 0,
+		BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+		Size = UDim2.new(1, 0, 1, 0),
+		BackgroundTransparency = 1
+	}, Navigation)
+	Create("UIPadding", {
+		PaddingTop = UDim.new(0, 8),
+		PaddingBottom = UDim.new(0, 8)
+	}, ButtonHolder)
+	Create("UIListLayout", {
+		Padding = UDim.new(0, 1),
+		SortOrder = Enum.SortOrder.LayoutOrder,
+		FillDirection = Enum.FillDirection.Horizontal
+	}, ButtonHolder)
+
+	--------------------------------------------------------------
+	-- ShownButton behavior
+	--------------------------------------------------------------
 	local uiShown = true
 	ShownButton.MouseButton1Click:Connect(function()
 		uiShown = not uiShown
@@ -150,14 +198,18 @@ function Library:new(options)
 		end
 	end)
 
-	-- === Drag ===
+	--------------------------------------------------------------
+	-- Drag
+	--------------------------------------------------------------
 	local dragging, dragInput, dragStart, startPos
 	local function updateDrag(input)
 		local delta = input.Position - dragStart
-		Main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+		Main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X,
+			startPos.Y.Scale, startPos.Y.Offset + delta.Y)
 	end
 	TopBar.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		if input.UserInputType == Enum.UserInputType.MouseButton1
+			or input.UserInputType == Enum.UserInputType.Touch then
 			dragging = true
 			dragStart = input.Position
 			startPos = Main.Position
@@ -167,19 +219,23 @@ function Library:new(options)
 		end
 	end)
 	TopBar.InputChanged:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+		if input.UserInputType == Enum.UserInputType.MouseMovement
+			or input.UserInputType == Enum.UserInputType.Touch then
 			dragInput = input
 		end
 	end)
-	userInputService.InputChanged:Connect(function(input)
+	UIS.InputChanged:Connect(function(input)
 		if input == dragInput and dragging then updateDrag(input) end
 	end)
 
+	--------------------------------------------------------------
+	-- Close / keybind
+	--------------------------------------------------------------
 	ExitButton.MouseButton1Click:Connect(function()
 		ScreenGui.Enabled = false
 		Window.Opened = false
 	end)
-	userInputService.InputBegan:Connect(function(input, gp)
+	UIS.InputBegan:Connect(function(input, gp)
 		if gp then return end
 		if input.KeyCode == options.keybind then
 			Window.Opened = not Window.Opened
@@ -187,7 +243,9 @@ function Library:new(options)
 		end
 	end)
 
-	-- === Notifications ===
+	--------------------------------------------------------------
+	-- Notifications
+	--------------------------------------------------------------
 	local NotifHolder = Create("Frame", {
 		Name = "Notifications",
 		AnchorPoint = Vector2.new(1, 1),
@@ -227,435 +285,495 @@ function Library:new(options)
 		end)
 	end
 
-	-- === Component factories ===
-	local function makeButton(parent, btnText, callback)
-		local ButtonFrame = Create("Frame", {
-			BorderSizePixel = 0, BackgroundColor3 = Color3.fromRGB(55, 87, 129),
-			Size = UDim2.new(1, 0, 0, 32)
+	--------------------------------------------------------------
+	-- Component factories (visuals 1:1 with converter)
+	--------------------------------------------------------------
+	local function makeButton(parent, text, cb)
+		local row = Create("Frame", {
+			Name = "Button", BorderSizePixel = 0,
+			BackgroundColor3 = Color3.fromRGB(55, 87, 129),
+			Size = UDim2.new(1, 0, 0, 32),
+			BorderColor3 = Color3.fromRGB(0, 0, 0)
 		}, parent)
-		Create("UICorner", { CornerRadius = UDim.new(0, 2) }, ButtonFrame)
-		local BtnTitle = Create("TextLabel", {
-			BorderSizePixel = 0, TextSize = 14, TextXAlignment = Enum.TextXAlignment.Left,
-			FontFace = FONT, TextColor3 = Color3.fromRGB(255, 255, 255),
-			BackgroundTransparency = 1, Size = UDim2.new(1, 0, 1, 0), Text = btnText
-		}, ButtonFrame)
-		Create("UIPadding", { PaddingLeft = UDim.new(0, 6) }, BtnTitle)
-		local ClickBtn = Create("TextButton", {
-			BackgroundTransparency = 1, Size = UDim2.new(1, 0, 1, 0), Text = ""
-		}, ButtonFrame)
-		ClickBtn.MouseButton1Click:Connect(function() if callback then callback() end end)
-		return ButtonFrame
+		local lbl = Create("TextLabel", {
+			Name = "Title", BorderSizePixel = 0, TextSize = 14,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+			FontFace = FONT_ROBOTO,
+			TextColor3 = Color3.fromRGB(255, 255, 255),
+			BackgroundTransparency = 1,
+			Size = UDim2.new(1, 0, 1, 0),
+			Text = text
+		}, row)
+		Create("UIPadding", { PaddingLeft = UDim.new(0, 6) }, lbl)
+		local click = Create("TextButton", {
+			BackgroundTransparency = 1, Size = UDim2.new(1, 0, 1, 0),
+			Text = "", Parent = row
+		}, row)
+		click.MouseButton1Click:Connect(function() if cb then cb() end end)
+		return row
 	end
 
 	local function makeLabel(parent, text, color)
-		local LabelFrame = Create("Frame", {
-			BorderSizePixel = 0, BackgroundColor3 = Color3.fromRGB(55, 87, 129),
-			Size = UDim2.new(1, 0, 0, 32)
+		local row = Create("Frame", {
+			Name = "Label", BorderSizePixel = 0,
+			BackgroundColor3 = Color3.fromRGB(55, 87, 129),
+			Size = UDim2.new(1, 0, 0, 32),
+			BorderColor3 = Color3.fromRGB(0, 0, 0)
 		}, parent)
-		Create("UICorner", { CornerRadius = UDim.new(0, 2) }, LabelFrame)
-		Create("TextLabel", {
-			BorderSizePixel = 0, TextSize = 14, TextXAlignment = Enum.TextXAlignment.Left,
-			FontFace = FONT, TextColor3 = color or Color3.fromRGB(255, 255, 255),
-			BackgroundTransparency = 1, Size = UDim2.new(1, 0, 1, 0), Text = tostring(text)
-		}, LabelFrame)
-		Create("UIPadding", { PaddingLeft = UDim.new(0, 6) }, LabelFrame)
-		return LabelFrame
+		local lbl = Create("TextLabel", {
+			Name = "Title", BorderSizePixel = 0, TextSize = 14,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+			FontFace = FONT_ROBOTO,
+			TextColor3 = color or Color3.fromRGB(255, 255, 255),
+			BackgroundTransparency = 1,
+			Size = UDim2.new(1, 0, 1, 0),
+			Text = tostring(text)
+		}, row)
+		Create("UIPadding", { PaddingLeft = UDim.new(0, 6) }, lbl)
+		return row
 	end
 
 	local function makeInfo(parent, text) return makeLabel(parent, text, Color3.fromRGB(255, 255, 16)) end
 	local function makeWarning(parent, text) return makeLabel(parent, text, Color3.fromRGB(255, 0, 0)) end
 
-	local function makeToggle(parent, toggleText, default, callback)
-		local ToggleFrame = Create("Frame", {
-			BorderSizePixel = 0, BackgroundColor3 = Color3.fromRGB(55, 87, 129),
-			Size = UDim2.new(1, 0, 0, 32)
-		}, parent)
-		Create("UICorner", { CornerRadius = UDim.new(0, 2) }, ToggleFrame)
-		Create("TextLabel", {
-			BorderSizePixel = 0, TextSize = 14, TextXAlignment = Enum.TextXAlignment.Left,
-			FontFace = FONT, TextColor3 = Color3.fromRGB(255, 255, 255),
-			BackgroundTransparency = 1, Size = UDim2.new(1, -40, 1, 0), Text = toggleText
-		}, ToggleFrame)
-		Create("UIPadding", { PaddingLeft = UDim.new(0, 6) }, ToggleFrame)
-		local CheckmarkHolder = Create("Frame", {
+	local function makeToggle(parent, text, default, cb)
+		local row = Create("Frame", {
+			Name = default and "ToggleActive" or "ToggleInactive",
 			BorderSizePixel = 0,
-			BackgroundColor3 = default and Color3.fromRGB(74, 139, 226) or Color3.fromRGB(53, 85, 123),
-			AnchorPoint = Vector2.new(1, 0.5),
-			Size = UDim2.new(0, 20, 0, 20),
-			Position = UDim2.new(1, -10, 0.5, 0)
-		}, ToggleFrame)
-		Create("UICorner", { CornerRadius = UDim.new(0, 3) }, CheckmarkHolder)
-		local ClickBtn = Create("TextButton", {
-			BackgroundTransparency = 1, Size = UDim2.new(1, 0, 1, 0), Text = ""
-		}, ToggleFrame)
-		local toggled = default
-		ClickBtn.MouseButton1Click:Connect(function()
-			toggled = not toggled
-			CheckmarkHolder.BackgroundColor3 = toggled and Color3.fromRGB(74, 139, 226) or Color3.fromRGB(53, 85, 123)
-			if callback then callback(toggled) end
-		end)
-		return ToggleFrame
-	end
-
-	local function makeSlider(parent, sliderText, min, max, default, callback)
-		local SliderFrame = Create("Frame", {
-			BorderSizePixel = 0, BackgroundColor3 = Color3.fromRGB(55, 87, 129),
+			BackgroundColor3 = Color3.fromRGB(55, 87, 129),
 			Size = UDim2.new(1, 0, 0, 32)
 		}, parent)
-		Create("UICorner", { CornerRadius = UDim.new(0, 2) }, SliderFrame)
-		Create("TextLabel", {
-			BorderSizePixel = 0, TextSize = 14, TextXAlignment = Enum.TextXAlignment.Left,
-			FontFace = FONT, TextColor3 = Color3.fromRGB(255, 255, 255),
-			BackgroundTransparency = 1, Size = UDim2.new(1, -70, 1, 0), Text = sliderText
-		}, SliderFrame)
-		Create("UIPadding", { PaddingLeft = UDim.new(0, 6) }, SliderFrame)
-		local ValueLabel = Create("TextLabel", {
-			BorderSizePixel = 0, TextSize = 14, TextXAlignment = Enum.TextXAlignment.Right,
-			FontFace = FONT, TextColor3 = Color3.fromRGB(255, 255, 255),
-			BackgroundTransparency = 1, AnchorPoint = Vector2.new(1, 0.5),
-			Size = UDim2.new(0, 50, 1, 0),
-			Text = tostring(default), Position = UDim2.new(1, -10, 0.5, 0)
-		}, SliderFrame)
-		local SliderBack = Create("Frame", {
-			BorderSizePixel = 0, BackgroundColor3 = Color3.fromRGB(53, 85, 123),
-			AnchorPoint = Vector2.new(0, 1), Size = UDim2.new(1, -20, 0, 4),
-			Position = UDim2.new(0, 10, 1, -4)
-		}, SliderFrame)
-		local Draggable = Create("Frame", {
-			BorderSizePixel = 0, BackgroundColor3 = Color3.fromRGB(74, 139, 226),
-			Size = UDim2.new(0, 0, 1, 0)
-		}, SliderBack)
-		local draggingSlider = false
-		local function updateSlider(input)
-			local mousePos = input.Position.X
-			local sliderPos = SliderBack.AbsolutePosition.X
-			local sliderSize = SliderBack.AbsoluteSize.X
-			local percent = math.clamp((mousePos - sliderPos) / sliderSize, 0, 1)
-			Draggable.Size = UDim2.new(percent, 0, 1, 0)
-			local value = math.floor(min + ((max - min) * percent) + 0.5)
-			ValueLabel.Text = tostring(value)
-			if callback then callback(value) end
-		end
-		SliderBack.InputBegan:Connect(function(input)
-			if input.UserInputType == Enum.UserInputType.MouseButton1 then
-				draggingSlider = true
-				updateSlider(input)
-			end
+		local lbl = Create("TextLabel", {
+			Name = "Title", BorderSizePixel = 0, TextSize = 14,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+			FontFace = FONT_ROBOTO,
+			TextColor3 = Color3.fromRGB(255, 255, 255),
+			BackgroundTransparency = 1,
+			Size = UDim2.new(1, 0, 1, 0),
+			Text = text
+		}, row)
+		Create("UIPadding", { PaddingLeft = UDim.new(0, 6) }, lbl)
+
+		local check = Create("Frame", {
+			Name = "CheckmarkHolder", BorderSizePixel = 0,
+			BackgroundColor3 = default and Color3.fromRGB(74, 139, 226) or Color3.fromRGB(53, 85, 123),
+			AnchorPoint = Vector2.new(1, 0),
+			Size = UDim2.new(0, 20, 0, 20),
+			Position = UDim2.new(0.98892, 0, 0.03125, 5)
+		}, row)
+
+		local click = Create("TextButton", {
+			BackgroundTransparency = 1, Size = UDim2.new(1, 0, 1, 0),
+			Text = "", Parent = row
+		}, row)
+
+		local state = default
+		click.MouseButton1Click:Connect(function()
+			state = not state
+			check.BackgroundColor3 = state and Color3.fromRGB(74, 139, 226) or Color3.fromRGB(53, 85, 123)
+			if cb then cb(state) end
 		end)
-		userInputService.InputChanged:Connect(function(input)
-			if draggingSlider and input.UserInputType == Enum.UserInputType.MouseMovement then updateSlider(input) end
-		end)
-		userInputService.InputEnded:Connect(function(input)
-			if input.UserInputType == Enum.UserInputType.MouseButton1 then draggingSlider = false end
-		end)
-		local defaultPercent = (default - min) / (max - min)
-		Draggable.Size = UDim2.new(defaultPercent, 0, 1, 0)
-		return SliderFrame
+
+		return {
+			Frame = row,
+			Set = function(_, v)
+				state = not not v
+				check.BackgroundColor3 = state and Color3.fromRGB(74, 139, 226) or Color3.fromRGB(53, 85, 123)
+				if cb then cb(state) end
+			end,
+			Get = function() return state end
+		}
 	end
 
-	local function makeDropdown(parent, dropText, optionsList, callback)
-		local DropdownFrame = Create("Frame", {
-			BorderSizePixel = 0, BackgroundColor3 = Color3.fromRGB(55, 87, 129),
-			ClipsDescendants = true, Size = UDim2.new(1, 0, 0, 32)
+	local function makeSlider(parent, text, min, max, default, cb)
+		local row = Create("Frame", {
+			Name = "Slider", BorderSizePixel = 0,
+			BackgroundColor3 = Color3.fromRGB(55, 87, 129),
+			Size = UDim2.new(1, 0, 0, 32)
 		}, parent)
-		Create("UICorner", { CornerRadius = UDim.new(0, 2) }, DropdownFrame)
-		local DropTitle = Create("TextLabel", {
-			BorderSizePixel = 0, TextSize = 14, TextXAlignment = Enum.TextXAlignment.Left,
-			FontFace = FONT, TextColor3 = Color3.fromRGB(255, 255, 255),
-			BackgroundTransparency = 1, Size = UDim2.new(1, 0, 1, 0), Text = dropText
-		}, DropdownFrame)
-		Create("UIPadding", { PaddingLeft = UDim.new(0, 6) }, DropTitle)
-		local OptionHolder = Create("Frame", {
-			Visible = false, BackgroundTransparency = 1,
-			Size = UDim2.new(1, 0, 0, 0),
-			Position = UDim2.new(0, 0, 0, 32)
-		}, DropdownFrame)
-		Create("UIListLayout", { Padding = UDim.new(0, 1), SortOrder = Enum.SortOrder.LayoutOrder }, OptionHolder)
-		local ClickBtn = Create("TextButton", {
-			BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 32), Text = ""
-		}, DropdownFrame)
-		local isOpen = false
-		ClickBtn.MouseButton1Click:Connect(function()
-			isOpen = not isOpen
-			OptionHolder.Visible = isOpen
-			if isOpen then
-				OptionHolder.Size = UDim2.new(1, 0, 0, #optionsList * 17)
-				DropdownFrame.Size = UDim2.new(1, 0, 0, 32 + (#optionsList * 17) + 4)
-			else
-				DropdownFrame.Size = UDim2.new(1, 0, 0, 32)
+
+		local title = Create("TextLabel", {
+			Name = "Title", BorderSizePixel = 0, TextSize = 14,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+			FontFace = FONT_ROBOTO,
+			TextColor3 = Color3.fromRGB(255, 255, 255),
+			BackgroundTransparency = 1,
+			Size = UDim2.new(1, -24, 1, 0),
+			Text = text
+		}, row)
+		Create("UIPadding", { PaddingLeft = UDim.new(0, 6) }, title)
+
+		local valueLbl = Create("TextLabel", {
+			Name = "Value", BorderSizePixel = 0, TextSize = 14,
+			TextXAlignment = Enum.TextXAlignment.Right,
+			BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+			FontFace = FONT_UBUNTU,
+			TextColor3 = Color3.fromRGB(255, 255, 255),
+			BackgroundTransparency = 1,
+			AnchorPoint = Vector2.new(1, 0),
+			Size = UDim2.new(0, 24, 1, -10),
+			Text = tostring(default),
+			Position = UDim2.new(1, 0, 0, 0)
+		}, row)
+
+		local back = Create("Frame", {
+			Name = "SliderBack", BorderSizePixel = 0,
+			BackgroundColor3 = Color3.fromRGB(53, 85, 123),
+			AnchorPoint = Vector2.new(0, 1),
+			Size = UDim2.new(1, 0, 0, 4),
+			Position = UDim2.new(0, 0, 1, 0)
+		}, row)
+
+		local drag = Create("Frame", {
+			Name = "Draggable", BorderSizePixel = 0,
+			BackgroundColor3 = Color3.fromRGB(74, 139, 226),
+			Size = UDim2.new(0, 0, 1, 0)
+		}, back)
+
+		local dragging = false
+		local function update(input)
+			local pct = math.clamp((input.Position.X - back.AbsolutePosition.X) / back.AbsoluteSize.X, 0, 1)
+			drag.Size = UDim2.new(pct, 0, 1, 0)
+			local v = math.floor(min + (max - min) * pct + 0.5)
+			valueLbl.Text = tostring(v)
+			if cb then cb(v) end
+		end
+		back.InputBegan:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseButton1 then
+				dragging = true; update(input)
 			end
 		end)
-		for _, optName in ipairs(optionsList) do
-			local OptionLabel = Create("TextLabel", {
+		UIS.InputChanged:Connect(function(input)
+			if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then update(input) end
+		end)
+		UIS.InputEnded:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end
+		end)
+
+		drag.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
+
+		return {
+			Frame = row,
+			Set = function(_, v)
+				v = math.clamp(v, min, max)
+				local pct = (v - min) / (max - min)
+				drag.Size = UDim2.new(pct, 0, 1, 0)
+				valueLbl.Text = tostring(math.floor(v))
+				if cb then cb(v) end
+			end
+		}
+	end
+
+	local function makeDropdown(parent, text, values, cb)
+		local drop = Create("Frame", {
+			Name = "DropDown", BorderSizePixel = 0,
+			BackgroundColor3 = Color3.fromRGB(55, 87, 129),
+			ClipsDescendants = true,
+			Size = UDim2.new(1, 0, 0, 32),
+			BorderColor3 = Color3.fromRGB(0, 0, 0)
+		}, parent)
+
+		local title = Create("TextLabel", {
+			Name = "Title", BorderSizePixel = 0, TextSize = 14,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+			FontFace = FONT_ROBOTO,
+			TextColor3 = Color3.fromRGB(255, 255, 255),
+			BackgroundTransparency = 1,
+			Size = UDim2.new(1, 0, 1, 0),
+			Text = text
+		}, drop)
+		Create("UIPadding", { PaddingLeft = UDim.new(0, 6) }, title)
+
+		local holder = Create("Frame", {
+			Name = "OptionHolder",
+			Visible = false, BorderSizePixel = 0,
+			BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+			Size = UDim2.new(1, 0, 1, -32),
+			Position = UDim2.new(0, 0, 0, 26),
+			BackgroundTransparency = 1
+		}, drop)
+		Create("UIListLayout", {
+			Padding = UDim.new(0, 1),
+			SortOrder = Enum.SortOrder.LayoutOrder
+		}, holder)
+
+		local click = Create("TextButton", {
+			BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 32),
+			Text = "", Parent = drop
+		}, drop)
+
+		local opened = false
+		click.MouseButton1Click:Connect(function()
+			opened = not opened
+			holder.Visible = opened
+			if opened then
+				holder.Size = UDim2.new(1, 0, 0, #values * 17)
+				drop.Size = UDim2.new(1, 0, 0, 32 + #values * 17 + 4)
+			else
+				drop.Size = UDim2.new(1, 0, 0, 32)
+			end
+		end)
+
+		for _, opt in ipairs(values) do
+			local optLbl = Create("TextLabel", {
 				BorderSizePixel = 0, TextSize = 14,
 				BackgroundColor3 = Color3.fromRGB(74, 139, 226),
-				FontFace = FONT,
-				TextColor3 = Color3.fromRGB(0, 0, 0), BackgroundTransparency = 0.7,
-				Size = UDim2.new(1, 0, 0, 16), Text = optName
-			}, OptionHolder)
-			local OptBtn = Create("TextButton", {
-				BackgroundTransparency = 1, Size = UDim2.new(1, 0, 1, 0), Text = ""
-			}, OptionLabel)
-			OptBtn.MouseEnter:Connect(function() OptionLabel.BackgroundTransparency = 0.2 end)
-			OptBtn.MouseLeave:Connect(function() OptionLabel.BackgroundTransparency = 0.7 end)
-			OptBtn.MouseButton1Click:Connect(function()
-				DropTitle.Text = dropText .. ": " .. optName
-				isOpen = false
-				OptionHolder.Visible = false
-				DropdownFrame.Size = UDim2.new(1, 0, 0, 32)
-				if callback then callback(optName) end
+				FontFace = FONT_ROBOTO,
+				TextColor3 = Color3.fromRGB(0, 0, 0),
+				BackgroundTransparency = 0.7,
+				Size = UDim2.new(1, 0, 0, 16),
+				Text = opt
+			}, holder)
+			Create("UIPadding", { PaddingLeft = UDim.new(0, 6) }, optLbl)
+			local optBtn = Create("TextButton", {
+				BackgroundTransparency = 1, Size = UDim2.new(1, 0, 1, 0),
+				Text = "", Parent = optLbl
+			}, optLbl)
+			optBtn.MouseEnter:Connect(function() optLbl.BackgroundTransparency = 0.2 end)
+			optBtn.MouseLeave:Connect(function() optLbl.BackgroundTransparency = 0.7 end)
+			optBtn.MouseButton1Click:Connect(function()
+				title.Text = text .. ": " .. opt
+				opened = false
+				holder.Visible = false
+				drop.Size = UDim2.new(1, 0, 0, 32)
+				if cb then cb(opt) end
 			end)
 		end
-		return DropdownFrame
+
+		return drop
 	end
 
-	local function makeInput(parent, inputText, default, placeholder, callback)
-		local InputFrame = Create("Frame", {
-			BorderSizePixel = 0, BackgroundColor3 = Color3.fromRGB(55, 87, 129),
+	local function makeInput(parent, text, default, placeholder, cb)
+		local row = Create("Frame", {
+			BorderSizePixel = 0,
+			BackgroundColor3 = Color3.fromRGB(55, 87, 129),
 			Size = UDim2.new(1, 0, 0, 32)
 		}, parent)
-		Create("UICorner", { CornerRadius = UDim.new(0, 2) }, InputFrame)
-		Create("TextLabel", {
-			BorderSizePixel = 0, TextSize = 14, TextXAlignment = Enum.TextXAlignment.Left,
-			FontFace = FONT, TextColor3 = Color3.fromRGB(255, 255, 255),
-			BackgroundTransparency = 1, Size = UDim2.new(0.4, 0, 1, 0), Text = inputText
-		}, InputFrame)
-		Create("UIPadding", { PaddingLeft = UDim.new(0, 6) }, InputFrame)
-		local TextBox = Create("TextBox", {
+
+		local lbl = Create("TextLabel", {
+			BorderSizePixel = 0, TextSize = 14,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+			FontFace = FONT_ROBOTO,
+			TextColor3 = Color3.fromRGB(255, 255, 255),
+			BackgroundTransparency = 1,
+			Size = UDim2.new(0.4, 0, 1, 0),
+			Text = text
+		}, row)
+		Create("UIPadding", { PaddingLeft = UDim.new(0, 6) }, lbl)
+
+		local box = Create("TextBox", {
 			BorderSizePixel = 0, TextSize = 14,
 			BackgroundColor3 = Color3.fromRGB(45, 70, 105),
 			TextColor3 = Color3.fromRGB(255, 255, 255),
-			Font = Enum.Font.Gotham, PlaceholderText = placeholder or "",
+			Font = Enum.Font.Gotham,
+			PlaceholderText = placeholder or "",
 			Text = default or "",
 			Size = UDim2.new(0.55, -10, 0, 22),
 			Position = UDim2.new(0.4, 0, 0, 5),
 			ClearTextOnFocus = false
-		}, InputFrame)
-		Create("UICorner", { CornerRadius = UDim.new(0, 3) }, TextBox)
-		TextBox.FocusLost:Connect(function()
-			if callback then callback(TextBox.Text) end
-		end)
-		return InputFrame
+		}, row)
+		Create("UICorner", { CornerRadius = UDim.new(0, 3) }, box)
+		box.FocusLost:Connect(function() if cb then cb(box.Text) end end)
+		return row
 	end
 
-	-- === CollapsingHeader factory (returns a "container" with same API) ===
+	--------------------------------------------------------------
+	-- CollapsingHeader factory
+	--------------------------------------------------------------
 	local function makeCollapsingHeader(parent, headerName)
-		headerName = headerName or "Section"
+		headerName = headerName or "Collapsing Header"
 
-		-- Контейнер-обёртка, растёт по высоте
-		local HeaderRoot = Create("Frame", {
-			Name = headerName .. "CollapsingHeader",
-			BackgroundTransparency = 1, BorderSizePixel = 0,
-			Size = UDim2.new(1, 0, 0, 0),
-			AutomaticSize = Enum.AutomaticSize.Y
-		}, parent)
-		Create("UIListLayout", {
-			Padding = UDim.new(0, 1),
-			SortOrder = Enum.SortOrder.LayoutOrder,
-			FillDirection = Enum.FillDirection.Vertical
-		}, HeaderRoot)
-
-		-- Шапка (синяя полоса, как в конвертере)
-		local HeaderRow = Create("Frame", {
-			Name = "HeaderRow", BorderSizePixel = 0,
+		-- Header (blue 32px strip)
+		local header = Create("Frame", {
+			Name = "CollapsingHeader", BorderSizePixel = 0,
 			BackgroundColor3 = Color3.fromRGB(55, 87, 129),
-			Size = UDim2.new(1, 0, 0, 32)
-		}, HeaderRoot)
-		Create("UICorner", { CornerRadius = UDim.new(0, 2) }, HeaderRow)
+			Size = UDim2.new(1, 0, 0, 32),
+			BorderColor3 = Color3.fromRGB(0, 0, 0)
+		}, parent)
 
-		local ShownLbl = Create("TextLabel", {
-			Name = "ShownButton", BackgroundTransparency = 1,
+		local titleLbl = Create("TextLabel", {
+			Name = "Title", BorderSizePixel = 0, TextSize = 14,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+			FontFace = FONT_ROBOTO,
+			TextColor3 = Color3.fromRGB(255, 255, 255),
+			BackgroundTransparency = 1,
+			Size = UDim2.new(1, 0, 1, 0),
+			Text = headerName,
+			Position = UDim2.new(0, 0, 0, 0)
+		}, header)
+		Create("UIPadding", { PaddingLeft = UDim.new(0, 30) }, titleLbl)
+
+		local shownBtn = Create("TextLabel", {
+			Name = "ShownButton", Active = true,
+			BorderSizePixel = 0, TextSize = 14,
+			BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+			FontFace = FONT_SRC,
+			TextColor3 = Color3.fromRGB(255, 255, 255),
+			BackgroundTransparency = 1,
 			Size = UDim2.new(0.064, 0, 0.96, 0),
-			Position = UDim2.new(0, 6, 0, 0),
-			FontFace = FONT, Text = "▼",
-			TextColor3 = Color3.fromRGB(255, 255, 255),
-			TextSize = 14, TextXAlignment = Enum.TextXAlignment.Left,
-			Parent = HeaderRow
-		})
+			Text = "▼", Selectable = true
+		}, header)
 
-		local TitleLbl = Create("TextLabel", {
-			Name = "Title", BackgroundTransparency = 1,
-			Size = UDim2.new(1, -30, 1, 0),
-			Position = UDim2.new(0, 30, 0, 0),
-			FontFace = FONT, Text = headerName,
-			TextColor3 = Color3.fromRGB(255, 255, 255),
-			TextSize = 14, TextXAlignment = Enum.TextXAlignment.Left,
-			Parent = HeaderRow
-		})
+		local click = Create("TextButton", {
+			BackgroundTransparency = 1, Size = UDim2.new(1, 0, 1, 0),
+			Text = "", Parent = header
+		}, header)
 
-		local ClickArea = Create("TextButton", {
-			Name = "ClickArea", BackgroundTransparency = 1,
-			Size = UDim2.new(1, 0, 1, 0), Text = "",
-			Parent = HeaderRow
-		})
-
-		-- Контейнер для элементов
-		local GroupHolder = Create("Frame", {
-			Name = "GroupHolder", BackgroundTransparency = 1,
-			BorderSizePixel = 0,
+		-- GroupHolder (elements go here)
+		local holder = Create("Frame", {
+			Name = "GroupHolder", BorderSizePixel = 0,
+			BackgroundColor3 = Color3.fromRGB(55, 87, 129),
+			ClipsDescendants = true,
 			Size = UDim2.new(1, 0, 0, 0),
-			AutomaticSize = Enum.AutomaticSize.Y,
-			ClipsDescendants = false
-		}, HeaderRoot)
+			Position = UDim2.new(0, 0, 0, 32),
+			BackgroundTransparency = 1
+		}, header)
 		Create("UIListLayout", {
 			Padding = UDim.new(0, 1),
 			SortOrder = Enum.SortOrder.LayoutOrder
-		}, GroupHolder)
-
-		local isOpen = true
-		ClickArea.MouseButton1Click:Connect(function()
-			isOpen = not isOpen
-			GroupHolder.Visible = isOpen
-			ShownLbl.Text = isOpen and "▼" or "▶"
-		end)
+		}, holder)
 
 		local CH = {}
-		function CH:AddToggle(id, opts) return makeToggle(GroupHolder, opts.Text, opts.Default, opts.Callback) end
-		function CH:AddSlider(id, opts) return makeSlider(GroupHolder, opts.Text, opts.Min, opts.Max, opts.Default, opts.Callback) end
-		function CH:AddButton(opts) return makeButton(GroupHolder, opts.Text, opts.Func) end
-		function CH:AddLabel(text) return makeLabel(GroupHolder, text) end
-		function CH:AddInfo(text) return makeInfo(GroupHolder, text) end
-		function CH:AddWarning(text) return makeWarning(GroupHolder, text) end
-		function CH:AddDropdown(id, opts) return makeDropdown(GroupHolder, opts.Text, opts.Values, opts.Callback) end
-		function CH:AddInput(id, opts) return makeInput(GroupHolder, opts.Text, opts.Default, opts.Placeholder, opts.Callback) end
-		function CH:SetOpen(state)
-			isOpen = not not state
-			GroupHolder.Visible = isOpen
-			ShownLbl.Text = isOpen and "▼" or "▶"
-		end
-		function CH:SetTitle(newTitle) TitleLbl.Text = newTitle end
+		function CH:AddToggle(id, o)  return makeToggle(holder, o.Text, o.Default, o.Callback) end
+		function CH:AddSlider(id, o)  return makeSlider(holder, o.Text, o.Min, o.Max, o.Default, o.Callback) end
+		function CH:AddButton(o)      return makeButton(holder, o.Text, o.Func) end
+		function CH:AddLabel(t)       return makeLabel(holder, t) end
+		function CH:AddInfo(t)        return makeInfo(holder, t) end
+		function CH:AddWarning(t)     return makeWarning(holder, t) end
+		function CH:AddDropdown(id,o) return makeDropdown(holder, o.Text, o.Values, o.Callback) end
+		function CH:AddInput(id,o)    return makeInput(holder, o.Text, o.Default, o.Placeholder, o.Callback) end
+
+		local open = true
+		click.MouseButton1Click:Connect(function()
+			open = not open
+			holder.Visible = open
+			shownBtn.Text = open and "▼" or "▶"
+			header.Size = open and UDim2.new(1, 0, 0, 32) or UDim2.new(1, 0, 0, 32)
+		end)
+
 		return CH
 	end
 
-	-- === Tab ===
+	--------------------------------------------------------------
+	-- Tab
+	--------------------------------------------------------------
 	function Window:CreateTab(tabName)
 		local Tab = {}
 
-		-- Кнопка-таб в горизонтальной навигации
-		local TabButton = Create("TextButton", {
+		-- Horizontal tab button (Active/Inactive style from converter)
+		local tabBtn = Create("TextLabel", {
 			Name = tabName .. "Button",
+			BorderSizePixel = 0, TextSize = 12,
+			TextXAlignment = Enum.TextXAlignment.Left,
 			BackgroundColor3 = Color3.fromRGB(55, 87, 129),
-			BackgroundTransparency = 1,
-			BorderSizePixel = 0,
-			Size = UDim2.new(0, 90, 1, 0),
-			AutoButtonColor = false,
-			FontFace = FONT,
-			Text = tabName,
+			FontFace = FONT_ROBOTO,
 			TextColor3 = Color3.fromRGB(169, 169, 169),
-			TextSize = 14
+			BackgroundTransparency = 0.8,
+			Size = UDim2.new(0, 90, 0, 22),
+			BorderColor3 = Color3.fromRGB(0, 0, 0),
+			Text = tabName
 		}, ButtonHolder)
-		Create("UICorner", { CornerRadius = UDim.new(0, 2) }, TabButton)
+		Create("UIPadding", { PaddingLeft = UDim.new(0, 8) }, tabBtn)
 
-		-- Контент-страница
-		local TabContent = Create("ScrollingFrame", {
-			Name = tabName .. "Tab",
-			BorderSizePixel = 0,
+		local tabClick = Create("TextButton", {
+			BackgroundTransparency = 1, Size = UDim2.new(1, 0, 1, 0),
+			Text = "", Parent = tabBtn
+		}, tabBtn)
+
+		-- ScrollingFrame page
+		local page = Create("ScrollingFrame", {
+			Name = tabName .. "Page", BorderSizePixel = 0,
 			BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-			BackgroundTransparency = 1,
 			Selectable = false,
 			Size = UDim2.new(1, 0, 1, 0),
 			Position = UDim2.new(0, 0, 0, 0),
 			BorderColor3 = Color3.fromRGB(0, 0, 0),
-			ScrollBarThickness = 3,
-			ScrollBarImageColor3 = Color3.fromRGB(55, 87, 129),
+			ScrollBarThickness = 0,
+			BackgroundTransparency = 1,
 			Visible = false,
 			CanvasSize = UDim2.new(0, 0, 0, 0),
-			AutomaticCanvasSize = Enum.AutomaticSize.Y,
-			Parent = ContentContainer
+			AutomaticCanvasSize = Enum.AutomaticSize.Y
 		}, ContentContainer)
 		Create("UIPadding", {
-			PaddingTop = UDim.new(0, 4),
-			PaddingRight = UDim.new(0, 4),
-			PaddingLeft = UDim.new(0, 4),
-			PaddingBottom = UDim.new(0, 4)
-		}, TabContent)
+			PaddingTop = UDim.new(0, 1),
+			PaddingRight = UDim.new(0, 1),
+			PaddingLeft = UDim.new(0, 1),
+			PaddingBottom = UDim.new(0, 1)
+		}, page)
 		Create("UIListLayout", {
 			Padding = UDim.new(0, 1),
 			SortOrder = Enum.SortOrder.LayoutOrder
-		}, TabContent)
+		}, page)
 
-		TabButton.MouseButton1Click:Connect(function()
-			for _, otherTab in pairs(Window.Tabs) do
-				otherTab.Button.TextColor3 = Color3.fromRGB(169, 169, 169)
-				otherTab.Button.BackgroundTransparency = 1
-				otherTab.Content.Visible = false
+		tabClick.MouseButton1Click:Connect(function()
+			for _, other in pairs(Window.Tabs) do
+				other.Button.TextColor3 = Color3.fromRGB(169, 169, 169)
+				other.Button.BackgroundTransparency = 0.8
+				other.Page.Visible = false
 			end
-			TabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-			TabButton.BackgroundTransparency = 0.8
-			TabContent.Visible = true
+			tabBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+			tabBtn.BackgroundTransparency = 0
+			page.Visible = true
 			Window.ActiveTab = Tab
 		end)
 
 		if not Window.ActiveTab then
-			TabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-			TabButton.BackgroundTransparency = 0.8
-			TabContent.Visible = true
+			tabBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+			tabBtn.BackgroundTransparency = 0
+			page.Visible = true
 			Window.ActiveTab = Tab
 		end
 
-		Tab.Button = TabButton
-		Tab.Content = TabContent
+		Tab.Button = tabBtn
+		Tab.Page = page
 		Window.Tabs[tabName] = Tab
 
-		-- Прямые методы (одна колонка)
-		function Tab:CreateButton(btnText, callback) return makeButton(TabContent, btnText, callback) end
-		function Tab:CreateLabel(text) return makeLabel(TabContent, text) end
-		function Tab:CreateInfo(text) return makeInfo(TabContent, text) end
-		function Tab:CreateWarning(text) return makeWarning(TabContent, text) end
-		function Tab:CreateToggle(text, default, cb) return makeToggle(TabContent, text, default, cb) end
-		function Tab:CreateSlider(text, min, max, default, cb) return makeSlider(TabContent, text, min, max, default, cb) end
-		function Tab:CreateDropdown(text, values, cb) return makeDropdown(TabContent, text, values, cb) end
-		function Tab:CreateInput(text, default, placeholder, cb) return makeInput(TabContent, text, default, placeholder, cb) end
-		function Tab:CreateCollapsingHeader(name) return makeCollapsingHeader(TabContent, name) end
+		-- Direct methods
+		function Tab:CreateButton(t, cb)     return makeButton(page, t, cb) end
+		function Tab:CreateLabel(t)          return makeLabel(page, t) end
+		function Tab:CreateInfo(t)           return makeInfo(page, t) end
+		function Tab:CreateWarning(t)        return makeWarning(page, t) end
+		function Tab:CreateToggle(t, d, cb)  return makeToggle(page, t, d, cb) end
+		function Tab:CreateSlider(t, mn, mx, d, cb) return makeSlider(page, t, mn, mx, d, cb) end
+		function Tab:CreateDropdown(t, v, cb) return makeDropdown(page, t, v, cb) end
+		function Tab:CreateInput(t, d, p, cb) return makeInput(page, t, d, p, cb) end
+		function Tab:CreateCollapsingHeader(n) return makeCollapsingHeader(page, n) end
 
-		-- === Groupbox-совместимость (одна колонка, как в конвертере) ===
-		local groupOrder = 0
-		local function makeGroupbox(name)
-			groupOrder = groupOrder + 1
-			local GroupFrame = Create("Frame", {
-				Name = name .. "Group", BackgroundTransparency = 1,
+		-- Groupbox = просто прозрачный враппер над page (одна колонка, как в конвертере)
+		local function makeGroupbox()
+			local gbInner = Create("Frame", {
+				Name = "GroupInner", BackgroundTransparency = 1,
+				BorderSizePixel = 0,
 				Size = UDim2.new(1, 0, 0, 0),
 				AutomaticSize = Enum.AutomaticSize.Y,
-				LayoutOrder = groupOrder
-			}, TabContent)
+				Parent = page
+			})
 			Create("UIListLayout", {
 				Padding = UDim.new(0, 1),
 				SortOrder = Enum.SortOrder.LayoutOrder
-			}, GroupFrame)
-
-			if name and name ~= "" then
-				Create("TextLabel", {
-					Size = UDim2.new(1, 0, 0, 20), BackgroundTransparency = 1,
-					Text = "  " .. name, TextColor3 = Color3.fromRGB(150, 180, 220),
-					Font = Enum.Font.GothamBold, TextSize = 13,
-					TextXAlignment = Enum.TextXAlignment.Left,
-					Parent = GroupFrame
-				})
-			end
-
-			local Inner = Create("Frame", {
-				Name = "Inner", BackgroundTransparency = 1,
-				Size = UDim2.new(1, 0, 0, 0),
-				AutomaticSize = Enum.AutomaticSize.Y,
-				Parent = GroupFrame
-			})
-			Create("UIListLayout", { Padding = UDim.new(0, 1), SortOrder = Enum.SortOrder.LayoutOrder }, Inner)
+			}, gbInner)
 
 			local GB = {}
-			function GB:AddToggle(id, opts) return makeToggle(Inner, opts.Text, opts.Default, opts.Callback) end
-			function GB:AddSlider(id, opts) return makeSlider(Inner, opts.Text, opts.Min, opts.Max, opts.Default, opts.Callback) end
-			function GB:AddButton(opts) return makeButton(Inner, opts.Text, opts.Func) end
-			function GB:AddLabel(text) return makeLabel(Inner, text) end
-			function GB:AddInfo(text) return makeInfo(Inner, text) end
-			function GB:AddWarning(text) return makeWarning(Inner, text) end
-			function GB:AddDropdown(id, opts) return makeDropdown(Inner, opts.Text, opts.Values, opts.Callback) end
-			function GB:AddInput(id, opts) return makeInput(Inner, opts.Text, opts.Default, opts.Placeholder, opts.Callback) end
+			function GB:AddToggle(id, o)  return makeToggle(gbInner, o.Text, o.Default, o.Callback) end
+			function GB:AddSlider(id, o)  return makeSlider(gbInner, o.Text, o.Min, o.Max, o.Default, o.Callback) end
+			function GB:AddButton(o)      return makeButton(gbInner, o.Text, o.Func) end
+			function GB:AddLabel(t)       return makeLabel(gbInner, t) end
+			function GB:AddInfo(t)        return makeInfo(gbInner, t) end
+			function GB:AddWarning(t)     return makeWarning(gbInner, t) end
+			function GB:AddDropdown(id,o) return makeDropdown(gbInner, o.Text, o.Values, o.Callback) end
+			function GB:AddInput(id,o)    return makeInput(gbInner, o.Text, o.Default, o.Placeholder, o.Callback) end
 			return GB
 		end
 
-		-- AddLeft/AddRight в новой раскладке = один и тот же столбец
-		function Tab:AddLeftGroupbox(name) return makeGroupbox(name) end
-		function Tab:AddRightGroupbox(name) return makeGroupbox(name) end
+		function Tab:AddLeftGroupbox(_) return makeGroupbox() end
+		function Tab:AddRightGroupbox(_) return makeGroupbox() end
 
 		return Tab
 	end
