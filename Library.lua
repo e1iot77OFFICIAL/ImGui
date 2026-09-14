@@ -805,65 +805,91 @@ function Library:new(options)
 	-- CollapsingHeader
 	--------------------------------------------------------------
 	local function makeCollapsingHeader(parent, headerName)
-		headerName = headerName or "Collapsing Header"
-		local header = Create("Frame", {
-			Name = "CollapsingHeader", BorderSizePixel = 0,
-			BackgroundColor3 = Color3.fromRGB(55, 87, 129),
-			Size = UDim2.new(1, 0, 0, 32),
-			BorderColor3 = Color3.fromRGB(0, 0, 0)
-		}, parent)
-		local titleLbl = Create("TextLabel", {
-			Name = "Title", BorderSizePixel = 0, TextSize = 14,
-			TextXAlignment = Enum.TextXAlignment.Left,
-			BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-			FontFace = FONT_ROBOTO,
-			TextColor3 = Color3.fromRGB(255, 255, 255),
-			BackgroundTransparency = 1, Size = UDim2.new(1, 0, 1, 0),
-			Text = headerName
-		}, header)
-		Create("UIPadding", { PaddingLeft = UDim.new(0, 30) }, titleLbl)
-		local shownBtn = Create("TextLabel", {
-			Name = "ShownButton", Active = true,
-			BorderSizePixel = 0, TextSize = 14,
-			BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-			FontFace = FONT_SRC,
-			TextColor3 = Color3.fromRGB(255, 255, 255),
-			BackgroundTransparency = 1,
-			Size = UDim2.new(0.064, 0, 0.96, 0),
-			Text = "▼", Selectable = true
-		}, header)
-		local click = Create("TextButton", {
-			BackgroundTransparency = 1, Size = UDim2.new(1, 0, 1, 0),
-			Text = "", Parent = header
-		}, header)
-		local holder = Create("Frame", {
-			Name = "GroupHolder", BorderSizePixel = 0,
-			BackgroundColor3 = Color3.fromRGB(55, 87, 129),
-			ClipsDescendants = true,
-			Size = UDim2.new(1, 0, 0, 0),
-			Position = UDim2.new(0, 0, 0, 32),
-			BackgroundTransparency = 1
-		}, header)
-		Create("UIListLayout", { Padding = UDim.new(0, 1), SortOrder = Enum.SortOrder.LayoutOrder }, holder)
-		local open = true
-		click.MouseButton1Click:Connect(function()
-			open = not open
-			holder.Visible = open
-			shownBtn.Text = open and "▼" or "▶"
-		end)
+    headerName = headerName or "Collapsing Header"
 
-		local CH = {}
-		function CH:AddToggle(id, o)  return makeToggle(holder, o.Text, o.Default, o.Callback) end
-		function CH:AddSlider(id, o)  return makeSlider(holder, o.Text, o.Min, o.Max, o.Default, o.Callback) end
-		function CH:AddButton(o)      return makeButton(holder, o.Text, o.Func) end
-		function CH:AddLabel(t)       return makeLabel(holder, t) end
-		function CH:AddInfo(t)        return makeInfo(holder, t) end
-		function CH:AddWarning(t)     return makeWarning(holder, t) end
-		function CH:AddDropdown(id,o) return makeDropdown(holder, o.Text, o.Values, o.Callback) end
-		function CH:AddInput(id,o)    return makeInput(holder, o.Text, o.Default, o.Placeholder, o.Callback) end
-		function CH:AddColorPicker(id, o) return makeColorPicker(holder, o.Text, o.Default, o.Callback) end
-		return CH
-	end
+    -- Root-контейнер, растёт по высоте
+    local root = Create("Frame", {
+        Name = "CHRoot",
+        BackgroundTransparency = 1, BorderSizePixel = 0,
+        Size = UDim2.new(1, 0, 0, 32),
+        AutomaticSize = Enum.AutomaticSize.Y,
+        Parent = parent
+    })
+    Create("UIListLayout", {
+        Padding = UDim.new(0, 1),
+        SortOrder = Enum.SortOrder.LayoutOrder
+    }, root)
+
+    -- Заголовок (синяя полоса)
+    local header = Create("Frame", {
+        Name = "CollapsingHeader", BorderSizePixel = 0,
+        BackgroundColor3 = Color3.fromRGB(55, 87, 129),
+        Size = UDim2.new(1, 0, 0, 32),
+        BorderColor3 = Color3.fromRGB(0, 0, 0)
+    }, root)
+
+    local titleLbl = Create("TextLabel", {
+        Name = "Title", BorderSizePixel = 0, TextSize = 14,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+        FontFace = FONT_ROBOTO,
+        TextColor3 = Color3.fromRGB(255, 255, 255),
+        BackgroundTransparency = 1,
+        Size = UDim2.new(1, 0, 1, 0),
+        Text = headerName
+    }, header)
+    Create("UIPadding", { PaddingLeft = UDim.new(0, 30) }, titleLbl)
+
+    local shownBtn = Create("TextLabel", {
+        Name = "ShownButton", Active = true,
+        BorderSizePixel = 0, TextSize = 14,
+        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+        FontFace = FONT_SRC,
+        TextColor3 = Color3.fromRGB(255, 255, 255),
+        BackgroundTransparency = 1,
+        Size = UDim2.new(0.064, 0, 0.96, 0),
+        Text = "▼", Selectable = true
+    }, header)
+
+    local click = Create("TextButton", {
+        BackgroundTransparency = 1, Size = UDim2.new(1, 0, 1, 0),
+        Text = "", Parent = header
+    }, header)
+
+    -- GroupHolder: авторазмер, без ClipsDescendants
+    local holder = Create("Frame", {
+        Name = "GroupHolder",
+        BorderSizePixel = 0,
+        BackgroundTransparency = 1,
+        Size = UDim2.new(1, 0, 0, 0),
+        AutomaticSize = Enum.AutomaticSize.Y,
+        ClipsDescendants = false,
+        Visible = true
+    }, root)
+    Create("UIListLayout", {
+        Padding = UDim.new(0, 1),
+        SortOrder = Enum.SortOrder.LayoutOrder
+    }, holder)
+
+    local open = true
+    click.MouseButton1Click:Connect(function()
+        open = not open
+        holder.Visible = open
+        shownBtn.Text = open and "▼" or "▶"
+    end)
+
+    local CH = {}
+    function CH:AddToggle(id, o)  return makeToggle(holder, o.Text, o.Default, o.Callback) end
+    function CH:AddSlider(id, o)  return makeSlider(holder, o.Text, o.Min, o.Max, o.Default, o.Callback) end
+    function CH:AddButton(o)      return makeButton(holder, o.Text, o.Func) end
+    function CH:AddLabel(t)       return makeLabel(holder, t) end
+    function CH:AddInfo(t)        return makeInfo(holder, t) end
+    function CH:AddWarning(t)     return makeWarning(holder, t) end
+    function CH:AddDropdown(id,o) return makeDropdown(holder, o.Text, o.Values, o.Callback) end
+    function CH:AddInput(id,o)    return makeInput(holder, o.Text, o.Default, o.Placeholder, o.Callback) end
+    function CH:AddColorPicker(id,o) return makeColorPicker(holder, o.Text, o.Default, o.Callback) end
+    return CH
+end
 
 	--------------------------------------------------------------
 	-- Tab
