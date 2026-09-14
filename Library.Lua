@@ -50,6 +50,7 @@ function Library:new(options)
 		Position = UDim2.new(0.5, 0, 0.5, 0)
 	}, ScreenGui)
 	Create("UICorner", { CornerRadius = UDim.new(0, 4) }, Main)
+	Create("UIStroke", { Color = Color3.fromRGB(55, 87, 129), Thickness = 1 }, Main)
 
 	local TopBar = Create("Frame", {
 		Name = "TopBar", BorderSizePixel = 0,
@@ -57,6 +58,7 @@ function Library:new(options)
 		Size = UDim2.new(1, 0, 0, 28)
 	}, Main)
 	Create("UICorner", { CornerRadius = UDim.new(0, 4) }, TopBar)
+	Create("UIStroke", { Color = Color3.fromRGB(36, 38, 37), ApplyStrokeMode = Enum.ApplyStrokeMode.Border }, TopBar)
 	Create("Frame", {
 		Name = "Extension", BorderSizePixel = 0,
 		BackgroundColor3 = Color3.fromRGB(55, 87, 129),
@@ -84,6 +86,18 @@ function Library:new(options)
 		FontFace = FONT
 	}, TopBar)
 
+	-- === ShownButton (скрывает Navigation + ContentContainer) ===
+	local ShownButton = Create("TextButton", {
+		Name = "ShownButton", BorderSizePixel = 0, TextSize = 14,
+		TextColor3 = Color3.fromRGB(255, 255, 255),
+		BackgroundTransparency = 1,
+		Size = UDim2.new(0.056, 0, 1, 0),
+		Position = UDim2.new(0.888, 0, 0, 0),
+		Text = "▼",
+		FontFace = FONT
+	}, TopBar)
+
+	-- === ContentContainer ===
 	local ContentContainer = Create("Frame", {
 		Name = "ContentContainer", BorderSizePixel = 0,
 		BackgroundColor3 = Color3.fromRGB(36, 38, 37),
@@ -93,6 +107,7 @@ function Library:new(options)
 	}, Main)
 	Create("UICorner", { CornerRadius = UDim.new(0, 4) }, ContentContainer)
 
+	-- === Navigation ===
 	local Navigation = Create("Frame", {
 		Name = "Navigation", BorderSizePixel = 0,
 		BackgroundColor3 = Color3.fromRGB(55, 87, 129),
@@ -109,6 +124,18 @@ function Library:new(options)
 	Create("UIPadding", { PaddingTop = UDim.new(0, 8), PaddingBottom = UDim.new(0, 8) }, ButtonHolder)
 	Create("UIListLayout", { Padding = UDim.new(0, 1), SortOrder = Enum.SortOrder.LayoutOrder }, ButtonHolder)
 
+	-- === ShownButton logic ===
+	local uiShown = true
+	ShownButton.MouseButton1Click:Connect(function()
+		uiShown = not uiShown
+		Navigation.Visible = uiShown
+		ContentContainer.Visible = uiShown
+		ShownButton.Text = uiShown and "▼" or "▲"
+		-- Если скрыто — растягиваем окно по высоте
+		Main.Size = uiShown and options.size or UDim2.new(0, options.size.X.Offset, 0, 40)
+	end)
+
+	-- === Drag ===
 	local dragging, dragInput, dragStart, startPos
 	local function updateDrag(input)
 		local delta = input.Position - dragStart
@@ -145,6 +172,7 @@ function Library:new(options)
 		end
 	end)
 
+	-- === Notifications ===
 	local NotifHolder = Create("Frame", {
 		Name = "Notifications",
 		AnchorPoint = Vector2.new(1, 1),
@@ -184,6 +212,7 @@ function Library:new(options)
 		end)
 	end
 
+	-- === Component factories (принимают parent) ===
 	local function makeButton(parent, btnText, callback)
 		local ButtonFrame = Create("Frame", {
 			BorderSizePixel = 0, BackgroundColor3 = Color3.fromRGB(55, 87, 129),
@@ -230,7 +259,6 @@ function Library:new(options)
 			BackgroundTransparency = 1, Size = UDim2.new(1, -40, 1, 0), Text = toggleText
 		}, ToggleFrame)
 		Create("UIPadding", { PaddingLeft = UDim.new(0, 10) }, ToggleFrame)
-
 		local CheckmarkHolder = Create("Frame", {
 			BorderSizePixel = 0,
 			BackgroundColor3 = default and Color3.fromRGB(74, 139, 226) or Color3.fromRGB(53, 85, 123),
@@ -239,11 +267,9 @@ function Library:new(options)
 			Position = UDim2.new(1, -10, 0.5, 0)
 		}, ToggleFrame)
 		Create("UICorner", { CornerRadius = UDim.new(0, 3) }, CheckmarkHolder)
-
 		local ClickBtn = Create("TextButton", {
 			BackgroundTransparency = 1, Size = UDim2.new(1, 0, 1, 0), Text = ""
 		}, ToggleFrame)
-
 		local toggled = default
 		ClickBtn.MouseButton1Click:Connect(function()
 			toggled = not toggled
@@ -280,7 +306,6 @@ function Library:new(options)
 			BorderSizePixel = 0, BackgroundColor3 = Color3.fromRGB(74, 139, 226),
 			Size = UDim2.new(0, 0, 1, 0)
 		}, SliderBack)
-
 		local draggingSlider = false
 		local function updateSlider(input)
 			local mousePos = input.Position.X
@@ -392,6 +417,7 @@ function Library:new(options)
 		return InputFrame
 	end
 
+	-- === Tab ===
 	function Window:CreateTab(tabName)
 		local Tab = {}
 
@@ -418,6 +444,7 @@ function Library:new(options)
 			PaddingTop = UDim.new(0, 6), PaddingRight = UDim.new(0, 6),
 			PaddingLeft = UDim.new(0, 6), PaddingBottom = UDim.new(0, 6)
 		}, TabContent)
+		Create("UIListLayout", { Padding = UDim.new(0, 2), SortOrder = Enum.SortOrder.LayoutOrder }, TabContent)
 
 		TabButton.InputBegan:Connect(function(input)
 			if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -444,6 +471,7 @@ function Library:new(options)
 		Tab.Content = TabContent
 		Window.Tabs[tabName] = Tab
 
+		-- Прямые методы (одна колонка)
 		function Tab:CreateButton(btnText, callback) return makeButton(TabContent, btnText, callback) end
 		function Tab:CreateLabel(text) return makeLabel(TabContent, text) end
 		function Tab:CreateInfo(text) return makeInfo(TabContent, text) end
@@ -453,6 +481,7 @@ function Library:new(options)
 		function Tab:CreateDropdown(text, values, cb) return makeDropdown(TabContent, text, values, cb) end
 		function Tab:CreateInput(text, default, placeholder, cb) return makeInput(TabContent, text, default, placeholder, cb) end
 
+		-- === Two-column layout для Groupbox ===
 		local ColumnsFrame = Create("Frame", {
 			Name = "Columns", BackgroundTransparency = 1,
 			Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y,
@@ -509,6 +538,92 @@ function Library:new(options)
 
 		function Tab:AddLeftGroupbox(name) return makeGroupbox(name, "left") end
 		function Tab:AddRightGroupbox(name) return makeGroupbox(name, "right") end
+
+		-- === CollapsingHeader ===
+		function Tab:CreateCollapsingHeader(headerName)
+			headerName = headerName or "Section"
+
+			local HeaderFrame = Create("Frame", {
+				Name = headerName .. "CollapsingHeader",
+				BackgroundTransparency = 1,
+				Size = UDim2.new(1, 0, 0, 0),
+				AutomaticSize = Enum.AutomaticSize.Y,
+				Parent = TabContent
+			})
+			Create("UIListLayout", { Padding = UDim.new(0, 2), SortOrder = Enum.SortOrder.LayoutOrder }, HeaderFrame)
+
+			-- Верхняя полоса-заголовок (клик по ней сворачивает)
+			local HeaderRow = Create("Frame", {
+				Name = "HeaderRow", BorderSizePixel = 0,
+				BackgroundColor3 = Color3.fromRGB(55, 87, 129),
+				Size = UDim2.new(1, 0, 0, 32),
+				Parent = HeaderFrame
+			})
+			Create("UICorner", { CornerRadius = UDim.new(0, 4) }, HeaderRow)
+
+			local ShownBtn = Create("TextLabel", {
+				Name = "ShownButton", BackgroundTransparency = 1,
+				Position = UDim2.new(0, 6, 0, 0),
+				Size = UDim2.new(0, 20, 1, 0),
+				FontFace = FONT, Text = "▼",
+				TextColor3 = Color3.fromRGB(255, 255, 255),
+				TextSize = 14, Parent = HeaderRow
+			})
+
+			local TitleLbl = Create("TextLabel", {
+				Name = "Title", BackgroundTransparency = 1,
+				Position = UDim2.new(0, 30, 0, 0),
+				Size = UDim2.new(1, -30, 1, 0),
+				FontFace = FONT, Text = headerName,
+				TextColor3 = Color3.fromRGB(255, 255, 255),
+				TextSize = 14,
+				TextXAlignment = Enum.TextXAlignment.Left,
+				Parent = HeaderRow
+			})
+
+			-- Клик по всей шапке
+			local ClickArea = Create("TextButton", {
+				Name = "ClickArea", BackgroundTransparency = 1,
+				Size = UDim2.new(1, 0, 1, 0), Text = "",
+				Parent = HeaderRow
+			})
+
+			-- Контейнер для элементов
+			local GroupHolder = Create("Frame", {
+				Name = "GroupHolder", BackgroundTransparency = 1,
+				Size = UDim2.new(1, 0, 0, 0),
+				AutomaticSize = Enum.AutomaticSize.Y,
+				Parent = HeaderFrame
+			})
+			Create("UIListLayout", { Padding = UDim.new(0, 2), SortOrder = Enum.SortOrder.LayoutOrder }, GroupHolder)
+
+			local isOpen = true
+			ClickArea.MouseButton1Click:Connect(function()
+				isOpen = not isOpen
+				GroupHolder.Visible = isOpen
+				ShownBtn.Text = isOpen and "▼" or "▶"
+			end)
+
+			-- Обёртка с теми же методами, что у Groupbox
+			local CH = {}
+			function CH:AddToggle(id, opts) return makeToggle(GroupHolder, opts.Text, opts.Default, opts.Callback) end
+			function CH:AddSlider(id, opts) return makeSlider(GroupHolder, opts.Text, opts.Min, opts.Max, opts.Default, opts.Callback) end
+			function CH:AddButton(opts) return makeButton(GroupHolder, opts.Text, opts.Func) end
+			function CH:AddLabel(text) return makeLabel(GroupHolder, text) end
+			function CH:AddInfo(text) return makeInfo(GroupHolder, text) end
+			function CH:AddWarning(text) return makeWarning(GroupHolder, text) end
+			function CH:AddDropdown(id, opts) return makeDropdown(GroupHolder, opts.Text, opts.Values, opts.Callback) end
+			function CH:AddInput(id, opts) return makeInput(GroupHolder, opts.Text, opts.Default, opts.Placeholder, opts.Callback) end
+
+			-- Дополнительно: можно раскрыть/свернуть программно
+			function CH:SetOpen(state)
+				isOpen = not not state
+				GroupHolder.Visible = isOpen
+				ShownBtn.Text = isOpen and "▼" or "▶"
+			end
+
+			return CH
+		end
 
 		return Tab
 	end
